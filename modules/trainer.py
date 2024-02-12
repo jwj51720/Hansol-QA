@@ -2,20 +2,23 @@ import pandas as pd
 import numpy as np
 import torch
 from tqdm import tqdm
-from modules import get_optimizer
+from modules import *
 
 
 def trainer(CFG, model, train_loader, valid_loader):
     device = CFG["DEVICE"]
-    epochs = CFG["EPOCHS"]
-    learning_rate = CFG["LEARNING_RATE"]
+    epochs = CFG['TRAIN']["EPOCHS"]
+    learning_rate = CFG['TRAIN']["LEARNING_RATE"]
+    es_patient = CFG['TRAIN']['EARLY_STOPPING']
+    es_count = 1
+    total_loss = 0
+    best_loss = float('inf')
+    
     optimizer = get_optimizer(model, learning_rate)
-
     for epoch in range(epochs):
         print(f"..Epoch {epoch+1}/{epochs}..")
-        total_loss = 0
-        progress_bar = tqdm(enumerate(train_loader), total=len(train_loader))
         model.train()
+        progress_bar = tqdm(enumerate(train_loader), total=len(train_loader))
         for batch_idx, batch in progress_bar:
             batch = batch.to(device)
             optimizer.zero_grad()
@@ -24,21 +27,30 @@ def trainer(CFG, model, train_loader, valid_loader):
             loss.backward()
             optimizer.step()
             total_loss += loss.item()
-        model.eval()
-        valid_total_loss = validation(CFG, model, valid_loader)
-    print(
-        f"Train Loss: {total_loss / len(train_loader)}, Valid Loss: {valid_total_loss / len(valid_loader)}"
-    )
+        valid_loss = validation(CFG, model, valid_loader)
+        if valid_loss < best_loss:
+            es_count = 1
+            best_loss = valid_loss
+            save_model(CFG, model, "model")
+        if es_count == es_patient:
+            print("Early stopping patient {es_patient} has been reached, validation loss has not been updated, ending training.")
+            return 1
+        print(
+            f"Train Loss: {total_loss / len(train_loader)}, Valid Loss: {valid_loss}"
+        )
+        return 0
 
 
 def validation(CFG, model, valid_loader):
     device = CFG["DEVICE"]
     total_loss = 0
-    model.eval()  # 모델을 평가 모드로 설정
-    with torch.no_grad():  # 그래디언트 계산을 비활성화
-        for batch in valid_loader:
+    model.eval()
+    progress_bar = tqdm(enumerate(valid_loader), total=len(valid_loader))
+    with torch.no_grad():
+        for batch_idx, batch in progress_bar:
             batch = batch.to(device)
             outputs = model(batch, labels=batch)
             loss = outputs.loss
             total_loss += loss.item()
-    return total_loss
+    valid_loss = total_loss / len(valid_loader)
+    return valid_loss

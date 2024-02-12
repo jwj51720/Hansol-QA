@@ -2,7 +2,7 @@ import pandas as pd
 from transformers import PreTrainedTokenizerFast
 from torch.utils.data import Dataset, DataLoader
 from sklearn.model_selection import train_test_split
-
+from modules import *
 
 def train_preprocessing(CFG):
     tokenizer = PreTrainedTokenizerFast.from_pretrained(
@@ -19,8 +19,9 @@ def train_preprocessing(CFG):
                 )  # Remove the batch dimension
                 formatted_data.append(input_ids)
     train_data, valid_data = train_test_split(
-        formatted_data, test_size=CFG["VALID_SPLIT"], random_state=CFG["SEED"]
+        formatted_data, test_size=CFG["TRAIN"]["VALID_SPLIT"], random_state=CFG["SEED"]
     )
+    save_model(CFG, tokenizer, "tokenizer")
     return train_data, valid_data
 
 
@@ -53,9 +54,9 @@ def get_loader(CFG):
     train_dataset = CustomDataset(train_data)
     valid_dataset = CustomDataset(valid_data)
 
-    train_loader = DataLoader(train_dataset, batch_size=CFG["BATCH_SIZE"], shuffle=True)
+    train_loader = DataLoader(train_dataset, batch_size=CFG["TRAIN"]["BATCH_SIZE"], shuffle=True)
     valid_loader = DataLoader(
-        valid_dataset, batch_size=CFG["BATCH_SIZE"], shuffle=False
+        valid_dataset, batch_size=CFG["TRAIN"]["BATCH_SIZE"], shuffle=False
     )
 
     return train_loader, valid_loader
@@ -64,5 +65,5 @@ def get_loader(CFG):
 def get_test_loader(CFG):
     test_data = test_preprocessing(CFG)
     test_dataset = CustomDataset(test_data)
-    test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False)
+    test_loader = DataLoader(test_dataset, batch_size=CFG["INFERENCE"]["BATCH_SIZE"], shuffle=False)
     return test_loader
