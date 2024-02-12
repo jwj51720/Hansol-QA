@@ -1,17 +1,18 @@
 {
     "DATA_PATH": "./data",
     "SAVE_PATH": "./result",
-    "TRAIN_DATA": "train.csv",
+    "TRAIN_DATA": "train_copy.csv",
     "TEST_DATA": "test.csv",
-    "MODEL": "skt/kogpt2-base-v2",
-    "TOKENIZER": "skt/kogpt2-base-v2",
     "SEED": 917,
     "TRAIN": {
+        "MODEL": "skt/kogpt2-base-v2",
+        "TOKENIZER": "skt/kogpt2-base-v2",
+        "OPTIMIZER": "adamw",
         "VALID_SPLIT": 0.2,
-        "BATCH_SIZE": 32,
+        "BATCH_SIZE": 16,
         "LEARNING_RATE": 2e-5,
-        "EPOCHS" : 10,
-        "EARLY_STOPPING": 10
+        "EPOCHS" : 2,
+        "EARLY_STOPPING": 0
     },
     "INFERENCE":{
         "TRAINED_MODEL": "./result/kogpt2-base-v2_y:m:d-h:m:s",
