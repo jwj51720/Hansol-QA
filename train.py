@@ -3,6 +3,7 @@ import torch
 import json
 import argparse  # argparse 모듈 임포트
 from modules import *
+import warnings
 
 
 def main(CFG):
@@ -10,7 +11,7 @@ def main(CFG):
     model = get_model(CFG)
     train_loader, valid_loader = get_loader(CFG)
     print("**LOAD DATA COMPLETE**")
-    trainer(CFG, model, train_loader, valid_loader)
+    training(CFG, model, train_loader, valid_loader)
     print("**MODEL TRAIN COMPLETE**")
     return 0
 
@@ -21,7 +22,6 @@ if __name__ == "__main__":
         "-c",
         "--config",
         type=str,
-        required=True,
         default="./base_config.json",
         help="JSON Config File Path",
     )
@@ -29,8 +29,7 @@ if __name__ == "__main__":
         "-g",
         "--gpu",
         type=int,
-        required=True,
-        default="2",
+        default=2,
         help="GPU number you want to use",
     )
     args = parser.parse_args()
@@ -45,7 +44,13 @@ if __name__ == "__main__":
     else:
         print(f"CUDA is not available. Using {device}.")
     config["DEVICE"] = device
-    if not os.path.exists(config['SAVE_PATH']):
-        os.makedirs(config['SAVE_PATH'])
-    config['START_TIME'] = start_time()
+
+    if not os.path.exists(config["SAVE_PATH"]):
+        os.makedirs(config["SAVE_PATH"])
+    config["START_TIME"] = start_time()
+
+    warnings.filterwarnings(
+        "ignore", category=UserWarning, message=".*TypedStorage is deprecated.*"
+    )
+    seed_everything(config["SEED"])
     main(config)
