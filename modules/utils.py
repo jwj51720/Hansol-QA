@@ -8,6 +8,7 @@ import random
 import torch
 import numpy as np
 import os
+import json
 from cryptography.fernet import Fernet
 
 
@@ -84,9 +85,11 @@ def seed_everything(seed):
 
 
 def crypto_decode(config):
-    key = input("Input Key String").encode()
+    key = input("Input Key String: ").encode()
     cipher_suite = Fernet(key)
     with open(config, "rb") as file:
         encrypted_config = file.read()
-    decrypted_config = cipher_suite.decrypt(encrypted_config)
-    return decrypted_config
+    decrypted_config_bytes = cipher_suite.decrypt(encrypted_config)
+    decrypted_config_str = decrypted_config_bytes.decode("utf-8")
+    decrypted_config_json = json.loads(decrypted_config_str)
+    return decrypted_config_json
