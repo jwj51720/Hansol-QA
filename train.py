@@ -33,8 +33,6 @@ if __name__ == "__main__":
         help="GPU number you want to use",
     )
     args = parser.parse_args()
-    # with open(args.config, "r") as f:
-    #     config = json.load(f)
     config = crypto_decode(args.config)
     device = "cpu"
     if torch.cuda.is_available():

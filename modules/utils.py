@@ -86,5 +86,7 @@ def seed_everything(seed):
 def crypto_decode(config):
     key = input("Input Key String").encode()
     cipher_suite = Fernet(key)
-    decrypted_config = cipher_suite.decrypt(config)
+    with open(config, "rb") as file:
+        encrypted_config = file.read()
+    decrypted_config = cipher_suite.decrypt(encrypted_config)
     return decrypted_config
