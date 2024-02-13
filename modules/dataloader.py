@@ -15,7 +15,10 @@ class CustomDataset(Dataset):
         return len(self.data)
 
     def __getitem__(self, idx):
-        return self.data[idx], self.masks[idx]
+        if self.masks is not None:
+            return self.data[idx], self.masks[idx]
+        else:
+            return self.data[idx]
 
 
 def train_preprocessing(CFG):
@@ -88,7 +91,7 @@ def get_loader(CFG):
 
 def get_test_loader(CFG):
     test_data = test_preprocessing(CFG)
-    test_dataset = CustomDataset(test_data)
+    test_dataset = CustomDataset(test_data, None)
     test_loader = DataLoader(
         test_dataset, batch_size=CFG["INFERENCE"]["BATCH_SIZE"], shuffle=False
     )

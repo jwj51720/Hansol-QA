@@ -1,6 +1,7 @@
 import os
 import torch
 import json
+import warnings
 import argparse
 from tqdm import tqdm
 from modules import *
@@ -9,14 +10,15 @@ from modules import *
 def main(CFG):
     print("**START**")
     model = get_model(CFG, "inference")
-    test_loader = get_loader(CFG)
+    test_loader = get_test_loader(CFG)
     print("**LOAD DATA COMPLETE**")
     inference(CFG, model, test_loader)
-    print("**MODEL INFERENCE COMPLETE**")
+    print("**MAKE SUBMISSION CSV COMPLETE**")
     return 0
 
 
 def inference(CFG, model, test_loader):
+    device = CFG["DEVICE"]
     config = CFG["INFERENCE"]
     outputs = []
     progress_bar = tqdm(enumerate(test_loader), total=len(test_loader))
@@ -33,7 +35,9 @@ def inference(CFG, model, test_loader):
                 num_return_sequences=config["NUM_RETURN_SEQUENCES"],
             )
             outputs.append(output_sequences)
+        print("**MODEL INFERENCE COMPLETE**")
         preds = extract_answer(CFG, outputs)
+    print("**ANSWER EXTRACT COMPLETE**")
     submission(CFG, preds)
 
 
@@ -43,7 +47,6 @@ if __name__ == "__main__":
         "-c",
         "--config",
         type=str,
-        required=True,
         default="./base_config.json",
         help="JSON Config File Path",
     )
@@ -51,7 +54,6 @@ if __name__ == "__main__":
         "-g",
         "--gpu",
         type=int,
-        required=True,
         default="2",
         help="GPU number you want to use",
     )
@@ -69,4 +71,10 @@ if __name__ == "__main__":
     config["DEVICE"] = device
     if not os.path.exists(config["SAVE_PATH"]):
         os.makedirs(config["SAVE_PATH"])
+    config["START_TIME"] = start_time()
+
+    warnings.filterwarnings(
+        "ignore", category=UserWarning, message=".*TypedStorage is deprecated.*"
+    )
+    seed_everything(config["SEED"])
     main(config)

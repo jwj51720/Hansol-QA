@@ -66,7 +66,7 @@ def submission(CFG, preds):
     model = SentenceTransformer("distiluse-base-multilingual-cased-v1")
     pred_embeddings = model.encode(preds)
     print("Shape of Prediction Embeddings: ", pred_embeddings.shape)
-    submit = pd.read_csv(f"{CFG['DATA_PATH']}/sample_submission.csv")
+    submit = pd.read_csv(f"{CFG['DATA_PATH']}/{CFG['SUBMISSION_DATA']}")
     submit.iloc[:, 1:] = pred_embeddings
     submission_name = CFG["INFERENCE"]["TRAINED_MODEL"].split("/")[-1]
     submit.to_csv(f'{CFG["SAVE_PATH"]}/{submission_name}.csv', index=False)
