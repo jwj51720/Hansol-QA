@@ -34,11 +34,12 @@ def training(CFG, model, train_loader, valid_loader):
         if valid_loss < best_loss:
             es_count = 1
             best_loss = valid_loss
+            print("Best Loss Updated. New Best Model Saved.")
             save_params(CFG, model, "model")
         else:
+            print(f"Eearly Stopping Count: {es_count}/{es_patient}")
             es_count += 1
-
-        if es_count == es_patient:
+        if es_count >= es_patient:
             print(
                 "Early stopping patient {es_patient} has been reached, validation loss has not been updated, ending training."
             )

@@ -43,11 +43,10 @@ if __name__ == "__main__":
     else:
         print(f"CUDA is not available. Using {device}.")
     config["DEVICE"] = device
-
     if not os.path.exists(config["SAVE_PATH"]):
         os.makedirs(config["SAVE_PATH"])
     config["START_TIME"] = start_time()
-
+    print("Start Time:", config["START_TIME"])
     warnings.filterwarnings(
         "ignore", category=UserWarning, message=".*TypedStorage is deprecated.*"
     )
