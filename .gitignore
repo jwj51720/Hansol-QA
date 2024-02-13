@@ -161,4 +161,4 @@ cython_debug/
 
 *.csv
 result/
-*.json
+config/
