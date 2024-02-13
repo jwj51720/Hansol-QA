@@ -8,6 +8,7 @@ import random
 import torch
 import numpy as np
 import os
+from cryptography.fernet import Fernet
 
 
 def start_time():
@@ -80,3 +81,10 @@ def seed_everything(seed):
     torch.cuda.manual_seed(seed)  # type: ignore
     torch.backends.cudnn.deterministic = True  # type: ignore
     torch.backends.cudnn.benchmark = True  # type: ignore
+
+
+def crypto_decode(config):
+    key = input("Input Key String").encode()
+    cipher_suite = Fernet(key)
+    decrypted_config = cipher_suite.decrypt(config)
+    return decrypted_config

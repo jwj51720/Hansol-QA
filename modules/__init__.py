@@ -8,4 +8,5 @@ from .utils import (
     extract_answer,
     submission,
     seed_everything,
+    crypto_decode,
 )
