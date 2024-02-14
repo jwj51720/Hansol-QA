@@ -47,19 +47,30 @@ if __name__ == "__main__":
         "-c",
         "--config",
         type=str,
-        default="./base_config.json",
-        help="JSON Config File Path",
+        help="JSON Config File Name",
     )
     parser.add_argument(
         "-g",
         "--gpu",
         type=int,
-        default="2",
+        default=2,
         help="GPU number you want to use",
     )
+    parser.add_argument(
+        "-t",
+        "--trained",
+        type=str,
+        default="kogpt2-base-v2_2024-02-13_02-35-59",
+        help="Trained Model Name you want to inference",
+    )
     args = parser.parse_args()
-    with open(args.config, "r") as f:
-        config = json.load(f)
+    config = crypto_decode(args.config)
+    config["INFERENCE"].update(
+        {
+            "TRAINED_MODEL": f"result/{args.trained}",
+            "TOKENIZER": f"result/{args.trained}",
+        }
+    )
     device = "cpu"
     if torch.cuda.is_available():
         n_gpu = torch.cuda.device_count()

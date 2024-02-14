@@ -22,7 +22,6 @@ if __name__ == "__main__":
         "-c",
         "--config",
         type=str,
-        default="./config/base_config",
         help="Encrypted Config File Path",
     )
     parser.add_argument(
