@@ -1,5 +1,5 @@
 import pandas as pd
-from transformers import PreTrainedTokenizerFast
+from transformers import PreTrainedTokenizerFast, AutoTokenizer
 from torch.utils.data import Dataset, DataLoader
 from sklearn.model_selection import train_test_split
 from torch.nn.utils.rnn import pad_sequence
@@ -22,9 +22,15 @@ class CustomDataset(Dataset):
 
 
 def train_preprocessing(CFG):
-    tokenizer = PreTrainedTokenizerFast.from_pretrained(
-        CFG["TRAIN"]["TOKENIZER"], eos_token="</s>", pad_token="<pad>"
-    )
+    train_tokenizer = CFG["TRAIN"]["TOKENIZER"]
+    if train_tokenizer == "skt/kogpt2-base-v2":
+        tokenizer = PreTrainedTokenizerFast.from_pretrained(
+            train_tokenizer, eos_token="</s>", pad_token="<pad>"
+        )
+    elif train_tokenizer == "beomi/OPEN-SOLAR-KO-10.7B":
+        tokenizer = AutoTokenizer.from_pretrained(
+            train_tokenizer, eos_token="</s>", pad_token="</s>"
+        )
     data = pd.read_csv(f'{CFG["DATA_PATH"]}/{CFG["TRAIN_DATA"]}')
     formatted_data = []
     attention_masks = []  # 어텐션 마스크를 저장할 리스트
