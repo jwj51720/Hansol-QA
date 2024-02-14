@@ -1,5 +1,10 @@
-from transformers import GPT2LMHeadModel, PreTrainedTokenizerFast
+from transformers import (
+    GPT2LMHeadModel,
+    PreTrainedTokenizerFast,
+    AutoModelForCausalLM,
+)
 from sentence_transformers import SentenceTransformer
+from peft import get_peft_config, get_peft_model, LoraConfig, TaskType
 from torch.optim import AdamW
 from datetime import datetime
 import pandas as pd
@@ -21,13 +26,30 @@ def start_time():
 
 def get_model(CFG, mode="train"):
     device = CFG["DEVICE"]
+    train_model = CFG["TRAIN"]["MODEL"]
+    if mode == "inference":
+        inference_model = CFG["INFERENCE"]["TRAINED_MODEL"]
+
     if mode == "train":
-        select_model = CFG["TRAIN"]["MODEL"]
-        if select_model == "skt/kogpt2-base-v2":
+        if train_model == "skt/kogpt2-base-v2":
             model = GPT2LMHeadModel.from_pretrained("skt/kogpt2-base-v2")
+        elif train_model == "beomi/OPEN-SOLAR-KO-10.7B":
+            model = AutoModelForCausalLM.from_pretrained(
+                "beomi/OPEN-SOLAR-KO-10.7B", torch_dtype=torch.bfloat16
+            )
+            peft_config = LoraConfig(
+                lora_alpha=16,
+                lora_dropout=0.1,
+                r=8,
+                bias="none",
+                inference_mode=False,
+            )
+            model = get_peft_model(model, peft_config)
     elif mode == "inference":
-        select_model = CFG["INFERENCE"]["TRAINED_MODEL"]
-        model = GPT2LMHeadModel.from_pretrained(select_model)
+        if train_model == "skt/kogpt2-base-v2":
+            model = GPT2LMHeadModel.from_pretrained(inference_model)
+        elif train_model == "beomi/OPEN-SOLAR-KO-10.7B":
+            model = AutoModelForCausalLM.from_pretrained("beomi/OPEN-SOLAR-KO-10.7B")
     return model.to(device)
 
 
