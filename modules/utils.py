@@ -2,10 +2,12 @@ from transformers import (
     GPT2LMHeadModel,
     PreTrainedTokenizerFast,
     AutoModelForCausalLM,
+    BitsAndBytesConfig,
 )
 from sentence_transformers import SentenceTransformer
 from peft import get_peft_config, get_peft_model, LoraConfig, TaskType
 from torch.optim import AdamW
+from torch.optim.lr_scheduler import CosineAnnealingLR
 from datetime import datetime
 import pandas as pd
 import pytz
@@ -27,6 +29,7 @@ def start_time():
 def get_model(CFG, mode="train"):
     device = CFG["DEVICE"]
     train_model = CFG["TRAIN"]["MODEL"]
+    lora = CFG["TRAIN"]["LORA"]
     if mode == "inference":
         inference_model = CFG["INFERENCE"]["TRAINED_MODEL"]
 
@@ -34,17 +37,21 @@ def get_model(CFG, mode="train"):
         if train_model == "skt/kogpt2-base-v2":
             model = GPT2LMHeadModel.from_pretrained("skt/kogpt2-base-v2")
         elif train_model == "beomi/OPEN-SOLAR-KO-10.7B":
-            model = AutoModelForCausalLM.from_pretrained(
-                "beomi/OPEN-SOLAR-KO-10.7B", torch_dtype=torch.bfloat16
+            bnb_config = BitsAndBytesConfig(
+                load_in_8bit=True,
             )
-            peft_config = LoraConfig(
-                lora_alpha=16,
-                lora_dropout=0.1,
-                r=8,
+            model = AutoModelForCausalLM.from_pretrained(
+                "beomi/OPEN-SOLAR-KO-10.7B",
+                quantization_config=bnb_config,
+            )
+            lora_config = LoraConfig(
+                lora_alpha=lora["ALPHA"],
+                lora_dropout=lora["DROPOUT"],
+                r=lora["R"],
                 bias="none",
                 inference_mode=False,
             )
-            model = get_peft_model(model, peft_config)
+            model = get_peft_model(model, lora_config)
     elif mode == "inference":
         if train_model == "skt/kogpt2-base-v2":
             model = GPT2LMHeadModel.from_pretrained(inference_model)
@@ -59,6 +66,14 @@ def get_optimizer(CFG, model):
     if select_optimizer.lower() == "adamw":
         optimizer = AdamW(model.parameters(), lr=learning_rate)
     return optimizer
+
+
+def get_scheduler(CFG, optimizer):
+    select_scheduler = CFG["TRAIN"]["SCHEDULER"]
+    select_scheduler_cfg = select_scheduler["CFG"]
+    if select_scheduler["NAME"].lower() == "cosineannealinglr":
+        scheduler = CosineAnnealingLR(optimizer, T_max=select_scheduler_cfg["T_MAX"])
+    return scheduler
 
 
 def save_params(CFG, params, type="model"):
@@ -90,9 +105,12 @@ def submission(CFG, preds):
     model = SentenceTransformer("distiluse-base-multilingual-cased-v1")
     pred_embeddings = model.encode(preds)
     print("Shape of Prediction Embeddings: ", pred_embeddings.shape)
+    submission_name = CFG["INFERENCE"]["TRAINED_MODEL"].split("/")[-1]
+    nl = pd.read_csv(f"{CFG['DATA_PATH']}/{CFG['TEST_DATA']}")
+    nl["답변"] = preds
+    nl.to_csv(f'NL_{CFG["SAVE_PATH"]}/{submission_name}.csv', index=False)
     submit = pd.read_csv(f"{CFG['DATA_PATH']}/{CFG['SUBMISSION_DATA']}")
     submit.iloc[:, 1:] = pred_embeddings
-    submission_name = CFG["INFERENCE"]["TRAINED_MODEL"].split("/")[-1]
     submit.to_csv(f'{CFG["SAVE_PATH"]}/{submission_name}.csv', index=False)
 
 
