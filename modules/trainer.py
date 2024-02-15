@@ -1,6 +1,7 @@
 import torch
 from tqdm import tqdm
 from modules.utils import *
+import wandb
 
 
 def training(CFG, model, train_loader, valid_loader):
@@ -49,6 +50,10 @@ def training(CFG, model, train_loader, valid_loader):
             )
             return 1
         print(f"Train Loss: {total_loss / len(train_loader)}, Valid Loss: {valid_loss}")
+        wandb.log(
+            {"Train loss": total_loss / len(train_loader), "Valid Loss": valid_loss},
+            step=epoch,
+        )
     return 0
 
 

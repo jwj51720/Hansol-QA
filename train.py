@@ -4,14 +4,17 @@ import json
 import argparse  # argparse 모듈 임포트
 from modules import *
 import warnings
+import wandb
 
 
 def main(CFG):
     print("**START**")
     model = get_model(CFG)
+    wandb.watch(model)
     train_loader, valid_loader = get_loader(CFG)
     print("**LOAD DATA COMPLETE**")
     training(CFG, model, train_loader, valid_loader)
+    wandb.finish()
     print("**MODEL TRAIN COMPLETE**")
     return 0
 
@@ -51,4 +54,6 @@ if __name__ == "__main__":
     )
     seed_everything(config["SEED"])
     config["PAD_LOC"] = "BACK" if "gpt" in config["TRAIN"]["MODEL"].lower() else "AHEAD"
+    wandb.login()
+    wandb.init(project="HansolDecoLLM", name=f'{config["START_TIME"]}')
     main(config)
