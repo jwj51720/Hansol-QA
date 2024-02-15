@@ -9,27 +9,31 @@ def training(CFG, model, train_loader, valid_loader):
     es_patient = CFG["TRAIN"]["EARLY_STOPPING"]
     es_count = 1
     best_loss = float("inf")
-
+    gradient_accumulation_steps = CFG["TRAIN"]["ACCUMUL_STEPS"]
     optimizer = get_optimizer(CFG, model)
+    scheduler = get_scheduler(CFG, optimizer)
     for epoch in range(epochs):
         print(f"..Epoch {epoch+1}/{epochs}..")
         model.train()
+        optimizer.zero_grad()
         total_loss = 0
         progress_bar = tqdm(enumerate(train_loader), total=len(train_loader))
         for batch_idx, (input_ids, attention_mask) in progress_bar:
             input_ids = input_ids.to(device)
             attention_mask = attention_mask.to(device)
-
-            optimizer.zero_grad()
             outputs = model(
                 input_ids=input_ids, attention_mask=attention_mask, labels=input_ids
-            )  # labels 수정
-            loss = outputs.loss
+            )
+            loss = outputs.loss / gradient_accumulation_steps
             loss.backward()
-            optimizer.step()
-
+            if (batch_idx + 1) % gradient_accumulation_steps == 0 or (
+                batch_idx + 1
+            ) == len(train_loader):
+                optimizer.step()
+                optimizer.zero_grad()
             total_loss += loss.item()
         valid_loss = validation(model, valid_loader, device)
+        scheduler.step()
 
         if valid_loss < best_loss:
             es_count = 1
@@ -50,15 +54,14 @@ def training(CFG, model, train_loader, valid_loader):
 
 def validation(model, valid_loader, device):
     total_loss = 0
-    model.eval()  # 모델을 평가 모드로 설정
+    model.eval()
 
-    with torch.no_grad():  # 그래디언트 계산 비활성화
+    with torch.no_grad():
         progress_bar = tqdm(enumerate(valid_loader), total=len(valid_loader))
         for batch_idx, (input_ids, attention_mask) in progress_bar:
             input_ids = input_ids.to(device)
             attention_mask = attention_mask.to(device)
 
-            # 모델 실행 및 손실 계산
             outputs = model(
                 input_ids=input_ids, attention_mask=attention_mask, labels=input_ids
             )
@@ -66,5 +69,5 @@ def validation(model, valid_loader, device):
 
             total_loss += loss.item()
 
-    valid_loss = total_loss / len(valid_loader)  # 평균 손실 계산
+    valid_loss = total_loss / len(valid_loader)
     return valid_loss
