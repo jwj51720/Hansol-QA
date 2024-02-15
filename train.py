@@ -50,4 +50,5 @@ if __name__ == "__main__":
         "ignore", category=UserWarning, message=".*TypedStorage is deprecated.*"
     )
     seed_everything(config["SEED"])
+    config["PAD_LOC"] = "BACK" if "gpt" in config["TRAIN"]["MODEL"].lower() else "AHEAD"
     main(config)

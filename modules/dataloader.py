@@ -29,25 +29,21 @@ def train_preprocessing(CFG):
         )
     elif train_tokenizer == "beomi/OPEN-SOLAR-KO-10.7B":
         tokenizer = AutoTokenizer.from_pretrained(
-            train_tokenizer, eos_token="</s>", pad_token="</s>"
+            train_tokenizer, eos_token="</s>", pad_token="</s>", padding_side="left"
         )
     data = pd.read_csv(f'{CFG["DATA_PATH"]}/{CFG["TRAIN_DATA"]}')
     formatted_data = []
-    attention_masks = []  # 어텐션 마스크를 저장할 리스트
+    attention_masks = []
     for _, row in data.iterrows():
         for q_col in ["질문_1", "질문_2"]:
             for a_col in ["답변_1", "답변_2", "답변_3", "답변_4", "답변_5"]:
                 input_text = row[q_col] + tokenizer.eos_token + row[a_col]
-                # `return_tensors="pt"` 옵션과 함께 `tokenizer` 호출
                 encoding = tokenizer(
                     input_text, return_tensors="pt", padding=True, truncation=True
                 )
-                formatted_data.append(encoding["input_ids"].squeeze(0))  # 배치 차원 제거
-                attention_masks.append(
-                    encoding["attention_mask"].squeeze(0)
-                )  # 배치 차원 제거
+                formatted_data.append(encoding["input_ids"].squeeze(0))
+                attention_masks.append(encoding["attention_mask"].squeeze(0))
 
-    # 학습 데이터와 검증 데이터로 분리
     train_data, valid_data, train_masks, valid_masks = train_test_split(
         formatted_data,
         attention_masks,
@@ -55,7 +51,6 @@ def train_preprocessing(CFG):
         random_state=CFG["SEED"],
     )
     save_params(CFG, tokenizer, "tokenizer")
-    # 훈련 데이터, 검증 데이터와 함께 어텐션 마스크도 반환
     return train_data, valid_data, train_masks, valid_masks, tokenizer
 
 
