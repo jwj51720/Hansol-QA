@@ -37,8 +37,14 @@ def get_model(CFG, mode="train"):
         if train_model == "skt/kogpt2-base-v2":
             model = GPT2LMHeadModel.from_pretrained("skt/kogpt2-base-v2")
         elif train_model == "beomi/OPEN-SOLAR-KO-10.7B":
+            # bnb_config = BitsAndBytesConfig(
+            #     load_in_8bit=True,
+            # )
             bnb_config = BitsAndBytesConfig(
-                load_in_8bit=True,
+                load_in_4bit=True,
+                bnb_4bit_use_double_quant=True,
+                bnb_4bit_quant_type="nf4",
+                bnb_4bit_compute_dtype=torch.bfloat16,
             )
             model = AutoModelForCausalLM.from_pretrained(
                 "beomi/OPEN-SOLAR-KO-10.7B",
@@ -72,7 +78,7 @@ def get_scheduler(CFG, optimizer):
     select_scheduler = CFG["TRAIN"]["SCHEDULER"]
     select_scheduler_cfg = select_scheduler["CFG"]
     if select_scheduler["NAME"].lower() == "cosineannealinglr":
-        scheduler = CosineAnnealingLR(optimizer, T_max=select_scheduler_cfg["T_MAX"])
+        scheduler = CosineAnnealingLR(optimizer, T_max=select_scheduler_cfg["TMAX"])
     return scheduler
 
 
