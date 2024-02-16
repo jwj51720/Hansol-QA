@@ -55,7 +55,13 @@ def train_preprocessing(CFG):
 
 
 def test_preprocessing(CFG):
-    tokenizer = PreTrainedTokenizerFast.from_pretrained(CFG["INFERENCE"]["TOKENIZER"])
+    tokenizer = (
+        PreTrainedTokenizerFast.from_pretrained(
+            CFG["INFERENCE"]["TOKENIZER"], padding_side="left"
+        )
+        if CFG["PAD_LOC"] == "HEAD"
+        else PreTrainedTokenizerFast.from_pretrained(CFG["INFERENCE"]["TOKENIZER"])
+    )
     data = pd.read_csv(f'{CFG["DATA_PATH"]}/{CFG["TEST_DATA"]}')
     formatted_data = []
     for _, row in data.iterrows():
@@ -73,20 +79,18 @@ def get_loader(CFG):
     )
     train_dataset = CustomDataset(train_data, train_masks)
     valid_dataset = CustomDataset(valid_data, valid_masks)
-
     train_loader = DataLoader(
         train_dataset,
         batch_size=CFG["TRAIN"]["BATCH_SIZE"],
         shuffle=True,
-        collate_fn=create_collate_fn(tokenizer),  # 여기에 collate_fn 지정
+        collate_fn=create_collate_fn(tokenizer),
     )
     valid_loader = DataLoader(
         valid_dataset,
         batch_size=CFG["TRAIN"]["BATCH_SIZE"],
         shuffle=False,
-        collate_fn=create_collate_fn(tokenizer),  # 여기에 collate_fn 지정
+        collate_fn=create_collate_fn(tokenizer),
     )
-
     return train_loader, valid_loader
 
 
@@ -101,18 +105,14 @@ def get_test_loader(CFG):
 
 def create_collate_fn(tokenizer):
     def collate_fn(batch):
-        # 배치 내의 `input_ids`와 `attention_mask`를 분리
         input_ids = [item[0] for item in batch]
         attention_masks = [item[1] for item in batch]
-
-        # `pad_sequence`를 사용하여 각각 패딩 적용
         input_ids_padded = pad_sequence(
             input_ids, batch_first=True, padding_value=tokenizer.pad_token_id
         )
         attention_masks_padded = pad_sequence(
             attention_masks, batch_first=True, padding_value=0
-        )  # 패딩된 부분은 0으로 마스킹
-
+        )
         return input_ids_padded, attention_masks_padded
 
     return collate_fn
