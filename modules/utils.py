@@ -5,7 +5,13 @@ from transformers import (
     BitsAndBytesConfig,
 )
 from sentence_transformers import SentenceTransformer
-from peft import get_peft_config, get_peft_model, LoraConfig, TaskType
+from peft import (
+    get_peft_config,
+    get_peft_model,
+    LoraConfig,
+    TaskType,
+    prepare_model_for_kbit_training,
+)
 from torch.optim import AdamW
 from torch.optim.lr_scheduler import CosineAnnealingLR
 from datetime import datetime
@@ -97,12 +103,13 @@ def extract_answer(CFG, outputs):
     tokenizer = PreTrainedTokenizerFast.from_pretrained(CFG["INFERENCE"]["TOKENIZER"])
     for output_sequences in outputs:
         for generated_sequence in output_sequences:
-            full_text = tokenizer.decode(generated_sequence, skip_special_tokens=False)
+            full_text = tokenizer.decode(generated_sequence, skip_special_tokens=True)
             answer_start = full_text.find(tokenizer.eos_token) + len(
                 tokenizer.eos_token
             )
             answer_only = full_text[answer_start:].strip()
             answer_only = answer_only.replace("\n", " ")
+            # answer_only = answer_only.replace("<pad>", "")
             preds.append(answer_only)
     return preds
 
