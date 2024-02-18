@@ -55,5 +55,6 @@ if __name__ == "__main__":
     seed_everything(config["SEED"])
     config["PAD_LOC"] = "BACK" if "gpt" in config["TRAIN"]["MODEL"].lower() else "AHEAD"
     wandb.login()
-    wandb.init(project="HansolDecoLLM", name=f'{config["START_TIME"]}')
+    config["NAME"] = "kogpt" if "gpt" in config["TRAIN"]["MODEL"].lower() else "solar"
+    wandb.init(project="HansolDecoLLM", name=f'{config["NAME"]}_{config["START_TIME"]}')
     main(config)
