@@ -57,6 +57,7 @@ def training(CFG, model, train_loader, valid_loader):
     return 0
 
 
+
 def validation(model, valid_loader, device):
     total_loss = 0
     model.eval()
