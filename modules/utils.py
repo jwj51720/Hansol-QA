@@ -55,6 +55,7 @@ def get_model(CFG, mode="train"):
             model = AutoModelForCausalLM.from_pretrained(
                 "beomi/OPEN-SOLAR-KO-10.7B",
                 quantization_config=bnb_config,
+                load_in_8bit=True,
             )
             lora_config = LoraConfig(
                 lora_alpha=lora["ALPHA"],
@@ -109,20 +110,28 @@ def extract_answer(CFG, outputs):
             )
             answer_only = full_text[answer_start:].strip()
             answer_only = answer_only.replace("\n", " ")
-            # answer_only = answer_only.replace("<pad>", "")
+            answer_only = answer_only.replace("<pad>", "")
             preds.append(answer_only)
     return preds
 
 
 def submission(CFG, preds):
     model = SentenceTransformer("distiluse-base-multilingual-cased-v1")
+    nl = pd.read_csv(f"{CFG['DATA_PATH']}/{CFG['TEST_DATA']}")
+    submit = pd.read_csv(f"{CFG['DATA_PATH']}/{CFG['SUBMISSION_DATA']}")
+    submission_name = CFG["INFERENCE"]["TRAINED_MODEL"].split("/")[-1]
+    nl["답변"] = preds
+    nl.to_csv(f'{CFG["SAVE_PATH"]}/NL_{submission_name}.csv', index=False)
+    if len(nl) != len(submit):
+        nl = (
+            nl.groupby("id")["답변"]
+            .apply(lambda x: " ".join(x.astype(str)))
+            .reset_index()
+        )
+        preds = nl["답변"]
+        nl.to_csv(f'{CFG["SAVE_PATH"]}/NL_merge_{submission_name}.csv', index=False)
     pred_embeddings = model.encode(preds)
     print("Shape of Prediction Embeddings: ", pred_embeddings.shape)
-    submission_name = CFG["INFERENCE"]["TRAINED_MODEL"].split("/")[-1]
-    nl = pd.read_csv(f"{CFG['DATA_PATH']}/{CFG['TEST_DATA']}")
-    nl["답변"] = preds
-    nl.to_csv(f'NL_{CFG["SAVE_PATH"]}/{submission_name}.csv', index=False)
-    submit = pd.read_csv(f"{CFG['DATA_PATH']}/{CFG['SUBMISSION_DATA']}")
     submit.iloc[:, 1:] = pred_embeddings
     submit.to_csv(f'{CFG["SAVE_PATH"]}/{submission_name}.csv', index=False)
 
