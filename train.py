@@ -10,6 +10,7 @@ import wandb
 def main(CFG):
     print("**START**")
     model = get_model(CFG)
+    wandb.config.update(CFG)
     wandb.watch(model)
     train_loader, valid_loader = get_loader(CFG)
     print("**LOAD DATA COMPLETE**")

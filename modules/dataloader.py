@@ -21,25 +21,39 @@ class CustomDataset(Dataset):
             return self.data[idx]
 
 
+class qa_template():
+    def __init__(self, CFG):
+        train_tokenizer = CFG["TRAIN"]["TOKENIZER"]
+        if train_tokenizer == "skt/kogpt2-base-v2":
+            template = "/kogpt.txt"
+        elif train_tokenizer == "beomi/OPEN-SOLAR-KO-10.7B":
+            template = "/bsolar.txt"
+        elif train_tokenizer == "LDCC/LDCC-SOLAR-10.7B":
+            template = "/ldcc.txt"
+        with open(CFG["DATA_PATH"] + template, 'r', encoding='utf-8') as file:
+            self.content = file.read()
+    def fill(self, q, a):
+        if a is None:
+            answer_start_index = self.content.find('<answer>')
+            content = self.content[:answer_start_index]
+        else:
+            content = self.content.replace('<question>', q)
+            content = content.replace('<answer>', a)
+        return content
+
 def train_preprocessing(CFG):
+    qa = qa_template(CFG)
     train_tokenizer = CFG["TRAIN"]["TOKENIZER"]
-    if train_tokenizer == "skt/kogpt2-base-v2":
-        tokenizer = PreTrainedTokenizerFast.from_pretrained(
-            train_tokenizer, eos_token="</s>", pad_token="<pad>"
-        )
-    elif train_tokenizer == "beomi/OPEN-SOLAR-KO-10.7B":
-        tokenizer = AutoTokenizer.from_pretrained(
-            train_tokenizer, eos_token="</s>", pad_token="</s>", padding_side="left"
-        )
+    tokenizer = get_tokenizer(train_tokenizer)
     data = pd.read_csv(f'{CFG["DATA_PATH"]}/{CFG["TRAIN_DATA"]}')
     formatted_data = []
     attention_masks = []
     for _, row in data.iterrows():
         for q_col in ["질문_1", "질문_2"]:
             for a_col in ["답변_1", "답변_2", "답변_3", "답변_4", "답변_5"]:
-                input_text = row[q_col] + tokenizer.eos_token + row[a_col]
+                input_text = qa.fill(row[q_col], row[a_col]) + tokenizer.eos_token
                 encoding = tokenizer(
-                    input_text, return_tensors="pt", padding=True, truncation=True
+                    input_text, return_tensors="pt", padding=True, truncation=True, add_special_tokens=False
                 )
                 formatted_data.append(encoding["input_ids"].squeeze(0))
                 attention_masks.append(encoding["attention_mask"].squeeze(0))
@@ -53,21 +67,31 @@ def train_preprocessing(CFG):
     save_params(CFG, tokenizer, "tokenizer")
     return train_data, valid_data, train_masks, valid_masks, tokenizer
 
+def get_tokenizer(tokenizer):
+    if tokenizer == "skt/kogpt2-base-v2":
+        load_tokenizer = PreTrainedTokenizerFast.from_pretrained(
+            tokenizer, eos_token="</s>", pad_token="<pad>"
+        )
+    elif tokenizer == "beomi/OPEN-SOLAR-KO-10.7B":
+        load_tokenizer = AutoTokenizer.from_pretrained(
+            tokenizer, eos_token="</s>", pad_token="</s>", padding_side="left"
+        )
+    elif tokenizer == "LDCC/LDCC-SOLAR-10.7B":
+        load_tokenizer = AutoTokenizer.from_pretrained(
+            tokenizer, eos_token="<|im_end|>", pad_token="</s>", padding_side="left"
+        )
+    return load_tokenizer
 
 def test_preprocessing(CFG):
-    tokenizer = (
-        PreTrainedTokenizerFast.from_pretrained(
-            CFG["INFERENCE"]["TOKENIZER"], padding_side="left"
-        )
-        if CFG["PAD_LOC"] == "HEAD"
-        else PreTrainedTokenizerFast.from_pretrained(CFG["INFERENCE"]["TOKENIZER"])
-    )
+    qa = qa_template(CFG)
+    test_tokenizer = CFG["TRAIN"]["TOKENIZER"]
+    tokenizer = get_tokenizer(test_tokenizer)
     data = pd.read_csv(f'{CFG["DATA_PATH"]}/{CFG["TEST_DATA"]}')
     formatted_data = []
     for _, row in data.iterrows():
-        input_text = row["질문"] + tokenizer.eos_token
+        input_text = qa.fill(row["질문"], None)
         input_ids = tokenizer.encode(
-            input_text, padding=True, return_tensors="pt"
+            input_text, padding=True, return_tensors="pt",add_special_tokens=False
         ).squeeze(0)
         formatted_data.append(input_ids)
     return formatted_data

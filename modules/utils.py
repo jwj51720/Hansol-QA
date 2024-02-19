@@ -42,7 +42,7 @@ def get_model(CFG, mode="train"):
     if mode == "train":
         if train_model == "skt/kogpt2-base-v2":
             model = GPT2LMHeadModel.from_pretrained("skt/kogpt2-base-v2")
-        elif train_model == "beomi/OPEN-SOLAR-KO-10.7B":
+        elif train_model in ["beomi/OPEN-SOLAR-KO-10.7B", "LDCC/LDCC-SOLAR-10.7B"]:
             # bnb_config = BitsAndBytesConfig(
             #     load_in_8bit=True,
             # )
@@ -53,23 +53,23 @@ def get_model(CFG, mode="train"):
                 bnb_4bit_compute_dtype=torch.bfloat16,
             )
             model = AutoModelForCausalLM.from_pretrained(
-                "beomi/OPEN-SOLAR-KO-10.7B",
+                train_model,
                 quantization_config=bnb_config,
-                load_in_8bit=True,
+                load_in_4bit=True,
             )
             lora_config = LoraConfig(
                 lora_alpha=lora["ALPHA"],
                 lora_dropout=lora["DROPOUT"],
                 r=lora["R"],
                 bias="none",
-                inference_mode=False,
+                task_type="CAUSAL_LM",
             )
             model = get_peft_model(model, lora_config)
     elif mode == "inference":
         if train_model == "skt/kogpt2-base-v2":
             model = GPT2LMHeadModel.from_pretrained(inference_model)
-        elif train_model == "beomi/OPEN-SOLAR-KO-10.7B":
-            model = AutoModelForCausalLM.from_pretrained("beomi/OPEN-SOLAR-KO-10.7B")
+        elif train_model in ["beomi/OPEN-SOLAR-KO-10.7B", "LDCC/LDCC-SOLAR-10.7B"]:
+            model = AutoModelForCausalLM.from_pretrained(inference_model)
     return model.to(device)
 
 
