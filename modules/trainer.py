@@ -106,7 +106,8 @@ class HFTraining:
             run_name=f"{self.CFG['NAME']}_{self.CFG['START_TIME']}"
         )
 
-    def train(self, model, train_dataset, eval_dataset):
+    def run(self, model, train_dataset, eval_dataset):
+        breakpoint()
         trainer = Trainer(
             model=model,
             args=self.training_args,
@@ -114,3 +115,6 @@ class HFTraining:
             eval_dataset=eval_dataset,
             callbacks=[EarlyStoppingCallback(early_stopping_patience=self.train_cfg["EARLY_STOPPING"])],
         )
+        trainer.train()
+        trainer.save_model()
+        return trainer

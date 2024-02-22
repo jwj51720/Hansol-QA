@@ -15,7 +15,7 @@ def main(CFG):
     train_dataset, eval_dataset, _, _ = get_loader(CFG)
     print("**LOAD DATA COMPLETE**")
     trainer = HFTraining(CFG, model)
-    trainer.train(model, train_dataset, eval_dataset)
+    trainer.run(model, train_dataset, eval_dataset)
     # training(CFG, model, train_loader, valid_loader)
     wandb.finish()
     print("**MODEL TRAIN COMPLETE**")
