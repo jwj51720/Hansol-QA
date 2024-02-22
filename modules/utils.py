@@ -54,6 +54,7 @@ def get_model(CFG, mode="train"):
             )
             model = AutoModelForCausalLM.from_pretrained(
                 train_model,
+                revision="v1.1",
                 quantization_config=bnb_config,
             )
             lora_config = LoraConfig(
