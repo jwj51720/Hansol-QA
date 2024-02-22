@@ -78,7 +78,7 @@ def get_tokenizer(tokenizer):
         )
     elif tokenizer == "LDCC/LDCC-SOLAR-10.7B":
         load_tokenizer = AutoTokenizer.from_pretrained(
-            tokenizer, eos_token="<|im_end|>", pad_token="</s>", padding_side="left"
+            tokenizer, revision="v1.1", eos_token="<|im_end|>", pad_token="</s>", padding_side="right"
         )
     return load_tokenizer
 
@@ -115,7 +115,7 @@ def get_loader(CFG):
         shuffle=False,
         collate_fn=create_collate_fn(tokenizer),
     )
-    return train_loader, valid_loader
+    return train_dataset, valid_dataset, train_loader, valid_loader
 
 
 def get_test_loader(CFG):
