@@ -103,7 +103,7 @@ class HFTraining:
             warmup_steps=10,
             load_best_model_at_end=True,
             report_to=["wandb"],
-            run_name=f'{self.CFG['NAME']}_{self.CFG['START_TIME']}'
+            run_name=f"{self.CFG['NAME']}_{self.CFG['START_TIME']}"
         )
 
     def train(self, model, train_dataset, eval_dataset):
