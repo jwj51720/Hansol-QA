@@ -12,7 +12,7 @@ def main(CFG):
     model = get_model(CFG)
     # wandb.config.update(CFG)
     # wandb.watch(model)
-    train_dataset, valid_dataset, _, _ = get_loader(CFG)
+    train_dataset, eval_dataset, _, _ = get_loader(CFG)
     print("**LOAD DATA COMPLETE**")
     trainer = HFTraining(CFG, model)
     trainer.train(model, train_dataset, eval_dataset)
