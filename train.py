@@ -10,11 +10,13 @@ import wandb
 def main(CFG):
     print("**START**")
     model = get_model(CFG)
-    wandb.config.update(CFG)
-    wandb.watch(model)
-    train_loader, valid_loader = get_loader(CFG)
+    # wandb.config.update(CFG)
+    # wandb.watch(model)
+    train_dataset, valid_dataset, _, _ = get_loader(CFG)
     print("**LOAD DATA COMPLETE**")
-    training(CFG, model, train_loader, valid_loader)
+    trainer = HFTraining(CFG, model)
+    trainer.train(model, train_dataset, eval_dataset)
+    # training(CFG, model, train_loader, valid_loader)
     wandb.finish()
     print("**MODEL TRAIN COMPLETE**")
     return 0
@@ -57,5 +59,5 @@ if __name__ == "__main__":
     config["PAD_LOC"] = "BACK" if "gpt" in config["TRAIN"]["MODEL"].lower() else "AHEAD"
     wandb.login()
     config["NAME"] = "kogpt" if "gpt" in config["TRAIN"]["MODEL"].lower() else "solar"
-    wandb.init(project="HansolDecoLLM", name=f'{config["NAME"]}_{config["START_TIME"]}')
+    # wandb.init(project="HansolDecoLLM", name=f'{config["NAME"]}_{config["START_TIME"]}')
     main(config)

@@ -2,6 +2,7 @@ import torch
 from tqdm import tqdm
 from modules.utils import *
 import wandb
+from transformers import Trainer, TrainingArguments, EarlyStoppingCallback
 
 
 def training(CFG, model, train_loader, valid_loader):
@@ -77,3 +78,39 @@ def validation(model, valid_loader, device):
 
     valid_loss = total_loss / len(valid_loader)
     return valid_loss
+
+
+class HFTraining:
+    def __init__(self, CFG, model) -> None:
+        self.CFG = CFG
+        self.train_cfg = CFG["TRAIN"]
+        self.training_args = TrainingArguments(
+            output_dir=CFG["SAVE_PATH"],
+            per_device_train_batch_size=self.train_cfg["BATCH_SIZE"],
+            per_device_eval_batch_size = self.train_cfg["BATCH_SIZE"],
+            gradient_accumulation_steps=self.train_cfg["ACCUMUL_STEPS"],
+            learning_rate = self.train_cfg["LEARNING_RATE"],
+            optim="adamw_torch",
+            fp16=True,
+            gradient_checkpointing=True,
+            save_strategy="epoch",
+            logging_dir="./logs",
+            evaluation_strategy="epoch",
+            adam_beta1=0.9,
+            adam_beta2=0.999,
+            adam_epsilon=1e-8,
+            lr_scheduler_type="cosine",
+            warmup_steps=10,
+            load_best_model_at_end=True,
+            report_to=["wandb"],
+            run_name=f'{self.CFG['NAME']}_{self.CFG['START_TIME']}'
+        )
+
+    def train(self, model, train_dataset, eval_dataset):
+        trainer = Trainer(
+            model=model,
+            args=self.training_args,
+            train_dataset=train_dataset,
+            eval_dataset=eval_dataset,
+            callbacks=[EarlyStoppingCallback(early_stopping_patience=self.train_cfg["EARLY_STOPPING"])],
+        )
