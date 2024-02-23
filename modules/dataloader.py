@@ -7,7 +7,7 @@ from modules.utils import *
 
 
 class CustomDataset(Dataset):
-    def __init__(self, data, masks):
+    def __init__(self, data, masks, is_hftrainer = True):
         self.data = data
         self.masks = masks
 
@@ -16,9 +16,11 @@ class CustomDataset(Dataset):
 
     def __getitem__(self, idx):
         if self.masks is not None:
-            return self.data[idx], self.masks[idx]
+            item = {"input_ids": self.data[idx], "attention_mask": self.masks[idx], "labels": self.data[idx]}
+            return item
         else:
-            return self.data[idx]
+            item = {"input_ids": self.data[idx]}
+            return item
 
 
 class qa_template():
@@ -53,7 +55,7 @@ def train_preprocessing(CFG):
             for a_col in ["답변_1", "답변_2", "답변_3", "답변_4", "답변_5"]:
                 input_text = qa.fill(row[q_col], row[a_col]) + tokenizer.eos_token
                 encoding = tokenizer(
-                    input_text, return_tensors="pt", padding=True, truncation=True, add_special_tokens=False
+                    input_text, return_tensors="pt", padding="max_length", truncation=True, add_special_tokens=False
                 )
                 formatted_data.append(encoding["input_ids"].squeeze(0))
                 attention_masks.append(encoding["attention_mask"].squeeze(0))
