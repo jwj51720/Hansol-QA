@@ -57,6 +57,11 @@ def get_model(CFG, mode="train"):
                 revision="v1.1",
                 quantization_config=bnb_config,
             )
+
+            model.config.use_cache = False
+            model.config.pretraining_tp = 1
+            model.enable_input_require_grads()
+
             lora_config = LoraConfig(
                 lora_alpha=lora["ALPHA"],
                 lora_dropout=lora["DROPOUT"],
@@ -65,6 +70,7 @@ def get_model(CFG, mode="train"):
                 task_type="CAUSAL_LM",
             )
             model = get_peft_model(model, lora_config)
+            
     elif mode == "inference":
         if train_model == "skt/kogpt2-base-v2":
             model = GPT2LMHeadModel.from_pretrained(inference_model)
