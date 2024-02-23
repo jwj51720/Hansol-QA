@@ -9,12 +9,12 @@ import wandb
 
 def main(CFG):
     print("**START**")
-    model = get_model(CFG)
+    model, lora_config = get_model(CFG)
     # wandb.config.update(CFG)
     # wandb.watch(model)
-    train_dataset, eval_dataset, _, _ = get_loader(CFG)
+    train_dataset, eval_dataset, _, _, tokenizer = get_loader(CFG)
     print("**LOAD DATA COMPLETE**")
-    trainer = HFTraining(CFG, model)
+    trainer = HFTraining(CFG, lora_config, tokenizer)
     trainer.run(model, train_dataset, eval_dataset)
     # training(CFG, model, train_loader, valid_loader)
     wandb.finish()

@@ -48,9 +48,9 @@ def get_model(CFG, mode="train"):
             # )
             bnb_config = BitsAndBytesConfig(
                 load_in_4bit=True,
-                bnb_4bit_use_double_quant=True,
+                bnb_4bit_use_double_quant=False,
                 bnb_4bit_quant_type="nf4",
-                bnb_4bit_compute_dtype=torch.bfloat16,
+                bnb_4bit_compute_dtype="float16",
             )
             model = AutoModelForCausalLM.from_pretrained(
                 train_model,
@@ -60,12 +60,12 @@ def get_model(CFG, mode="train"):
 
             model.config.use_cache = False
             model.config.pretraining_tp = 1
-            model.enable_input_require_grads()
+            # model.enable_input_require_grads()
 
             lora_config = LoraConfig(
-                lora_alpha=lora["ALPHA"],
-                lora_dropout=lora["DROPOUT"],
-                r=lora["R"],
+                lora_alpha=32,
+                lora_dropout=0.1,
+                r=8,
                 bias="none",
                 task_type="CAUSAL_LM",
             )
@@ -76,7 +76,8 @@ def get_model(CFG, mode="train"):
             model = GPT2LMHeadModel.from_pretrained(inference_model)
         elif train_model in ["beomi/OPEN-SOLAR-KO-10.7B", "LDCC/LDCC-SOLAR-10.7B"]:
             model = AutoModelForCausalLM.from_pretrained(inference_model)
-    return model.to(device)
+    return model.to(device), lora_config
+            
 
 
 def get_optimizer(CFG, model):
@@ -161,3 +162,16 @@ def crypto_decode(config):
     decrypted_config_str = decrypted_config_bytes.decode("utf-8")
     decrypted_config_json = json.loads(decrypted_config_str)
     return decrypted_config_json
+
+
+def model_size_in_mb(model):
+    # 모델의 파라미터 수 계산
+    total_params = sum(p.numel() for p in model.parameters())
+    
+    # 파라미터를 바이트 단위로 변환 (Float32를 사용한다고 가정)
+    total_bytes = total_params * 4
+    
+    # 바이트를 메가바이트(MB) 단위로 변환
+    total_mb = total_bytes / (1024 ** 2)
+    
+    return total_mb
