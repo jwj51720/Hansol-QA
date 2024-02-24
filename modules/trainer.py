@@ -93,7 +93,7 @@ class HFTraining:
             learning_rate = self.train_cfg["LEARNING_RATE"],
             optim="adamw_torch",
             fp16=False,
-            bf16=True,
+            bf16=False,
             gradient_checkpointing=True,
             save_strategy="epoch",
             logging_dir="./logs",
@@ -112,6 +112,7 @@ class HFTraining:
         self.tokenizer = tokenizer
 
     def run(self, model, train_dataset, eval_dataset):
+        breakpoint()
         trainer = Trainer(
             model=model,
             args=self.training_args,

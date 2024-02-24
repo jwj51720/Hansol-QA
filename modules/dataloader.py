@@ -1,5 +1,5 @@
 import pandas as pd
-from transformers import PreTrainedTokenizerFast, AutoTokenizer
+from transformers import PreTrainedTokenizerFast, AutoTokenizer, DataCollatorWithPadding
 from torch.utils.data import Dataset, DataLoader
 from sklearn.model_selection import train_test_split
 from torch.nn.utils.rnn import pad_sequence
@@ -47,6 +47,7 @@ def train_preprocessing(CFG):
     qa = qa_template(CFG)
     train_tokenizer = CFG["TRAIN"]["TOKENIZER"]
     tokenizer = get_tokenizer(train_tokenizer)
+    data_collator = DataCollatorWithPadding(tokenizer=tokenizer, return_tensors="pt")
     data = pd.read_csv(f'{CFG["DATA_PATH"]}/{CFG["TRAIN_DATA"]}')
     formatted_data = []
     attention_masks = []
@@ -55,7 +56,7 @@ def train_preprocessing(CFG):
             for a_col in ["답변_1", "답변_2", "답변_3", "답변_4", "답변_5"]:
                 input_text = qa.fill(row[q_col], row[a_col]) + tokenizer.eos_token
                 encoding = tokenizer(
-                    input_text, return_tensors="pt", padding="max_length", truncation=True, add_special_tokens=False
+                    input_text, return_tensors="pt", padding="max_length", max_length=512, truncation=True, add_special_tokens=False
                 )
                 formatted_data.append(encoding["input_ids"].squeeze(0))
                 attention_masks.append(encoding["attention_mask"].squeeze(0))

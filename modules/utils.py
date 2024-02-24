@@ -60,7 +60,7 @@ def get_model(CFG, mode="train"):
 
             model.config.use_cache = False
             model.config.pretraining_tp = 1
-            # model.enable_input_require_grads()
+            model.enable_input_require_grads()
 
             lora_config = LoraConfig(
                 lora_alpha=32,
