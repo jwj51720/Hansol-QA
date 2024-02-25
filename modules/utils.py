@@ -32,51 +32,52 @@ def start_time():
     return formatted_time
 
 
+def initialize_model(model_name, quantization_config=None, revision=None, is_training=True, CFG=None):
+    if quantization_config:
+        model = AutoModelForCausalLM.from_pretrained(
+            model_name,
+            revision=revision,
+            quantization_config=quantization_config,
+        )
+    else:
+        model = GPT2LMHeadModel.from_pretrained(model_name) if is_training else AutoModelForCausalLM.from_pretrained(model_name)
+
+    if is_training and CFG:
+        model.config.use_cache = False
+        model.config.pretraining_tp = 1
+        model.enable_input_require_grads()
+
+        lora_config = LoraConfig(
+            lora_alpha=CFG['TRAIN']['LORA']['ALPHA'],
+            lora_dropout=CFG['TRAIN']['LORA']['DROPOUT'],
+            r=CFG['TRAIN']['LORA']['R'],
+            bias="none",
+            task_type="CAUSAL_LM",
+        )
+        model = get_peft_model(model, lora_config)
+    return model
+
 def get_model(CFG, mode="train"):
     device = CFG["DEVICE"]
     train_model = CFG["TRAIN"]["MODEL"]
-    lora = CFG["TRAIN"]["LORA"]
-    if mode == "inference":
-        inference_model = CFG["INFERENCE"]["TRAINED_MODEL"]
+    lora_config = None
+    
+    is_training = mode == "train"
+    model_name = CFG["TRAIN"]["MODEL"] if is_training else CFG["INFERENCE"]["TRAINED_MODEL"]
 
-    if mode == "train":
-        if train_model == "skt/kogpt2-base-v2":
-            model = GPT2LMHeadModel.from_pretrained("skt/kogpt2-base-v2")
-        elif train_model in ["beomi/OPEN-SOLAR-KO-10.7B", "LDCC/LDCC-SOLAR-10.7B"]:
-            # bnb_config = BitsAndBytesConfig(
-            #     load_in_8bit=True,
-            # )
-            bnb_config = BitsAndBytesConfig(
-                load_in_4bit=True,
-                bnb_4bit_use_double_quant=False,
-                bnb_4bit_quant_type="nf4",
-                bnb_4bit_compute_dtype="float16",
-            )
-            model = AutoModelForCausalLM.from_pretrained(
-                train_model,
-                revision="v1.1",
-                quantization_config=bnb_config,
-            )
+    if train_model in ["beomi/OPEN-SOLAR-KO-10.7B", "LDCC/LDCC-SOLAR-10.7B"] and is_training:
+        bnb_config = BitsAndBytesConfig(
+            load_in_4bit=True,
+            bnb_4bit_use_double_quant=False,
+            bnb_4bit_quant_type="nf4",
+            bnb_4bit_compute_dtype="float16",
+        )
+        model = initialize_model(model_name, quantization_config=bnb_config, revision="v1.1", is_training=is_training, CFG=CFG)
+    else:
+        model = initialize_model(model_name, is_training=is_training)
 
-            model.config.use_cache = False
-            model.config.pretraining_tp = 1
-            model.enable_input_require_grads()
-
-            lora_config = LoraConfig(
-                lora_alpha=32,
-                lora_dropout=0.1,
-                r=8,
-                bias="none",
-                task_type="CAUSAL_LM",
-            )
-            model = get_peft_model(model, lora_config)
-            
-    elif mode == "inference":
-        if train_model == "skt/kogpt2-base-v2":
-            model = GPT2LMHeadModel.from_pretrained(inference_model)
-        elif train_model in ["beomi/OPEN-SOLAR-KO-10.7B", "LDCC/LDCC-SOLAR-10.7B"]:
-            model = AutoModelForCausalLM.from_pretrained(inference_model)
     return model.to(device), lora_config
+
             
 
 
