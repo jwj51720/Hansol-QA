@@ -49,11 +49,13 @@ def train_preprocessing(CFG):
     tokenizer = get_tokenizer(train_tokenizer)
     data_collator = DataCollatorWithPadding(tokenizer=tokenizer, return_tensors="pt")
     data = pd.read_csv(f'{CFG["DATA_PATH"]}/{CFG["TRAIN_DATA"]}')
+    columns_with_question = [col for col in data.columns if '질문' in col]
+    columns_with_answer = [col for col in data.columns if '답변' in col]
     formatted_data = []
     attention_masks = []
     for _, row in data.iterrows():
-        for q_col in ["질문_1", "질문_2"]:
-            for a_col in ["답변_1", "답변_2", "답변_3", "답변_4", "답변_5"]:
+        for q_col in columns_with_question:
+            for a_col in columns_with_answer:
                 input_text = qa.fill(row[q_col], row[a_col]) + tokenizer.eos_token
                 encoding = tokenizer(
                     input_text, return_tensors="pt", padding="max_length", max_length=CFG["TRAIN"]['MAX_SEQ_LEN'], truncation=True, add_special_tokens=False
