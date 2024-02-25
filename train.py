@@ -10,8 +10,6 @@ import wandb
 def main(CFG):
     print("**START**")
     model, lora_config = get_model(CFG)
-    # wandb.config.update(CFG)
-    # wandb.watch(model)
     train_dataset, eval_dataset, _, _, tokenizer = get_loader(CFG)
     print("**LOAD DATA COMPLETE**")
     trainer = HFTraining(CFG, lora_config, tokenizer)
