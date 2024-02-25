@@ -3,7 +3,6 @@ from tqdm import tqdm
 from modules.utils import *
 import wandb
 from transformers import Trainer, TrainingArguments, EarlyStoppingCallback
-from trl import SFTTrainer
 
 
 def training(CFG, model, train_loader, valid_loader):
@@ -63,7 +62,6 @@ def training(CFG, model, train_loader, valid_loader):
 def validation(model, valid_loader, device):
     total_loss = 0
     model.eval()
-
     with torch.no_grad():
         progress_bar = tqdm(enumerate(valid_loader), total=len(valid_loader))
         for batch_idx, (input_ids, attention_mask) in progress_bar:
@@ -87,9 +85,9 @@ class HFTraining:
         self.train_cfg = CFG["TRAIN"]
         self.training_args = TrainingArguments(
             output_dir=CFG["SAVE_PATH"],
-            per_device_train_batch_size=16,
-            per_device_eval_batch_size = 16,
-            gradient_accumulation_steps=1,
+            per_device_train_batch_size=self.train_cfg["BATCH_SIZE"],
+            per_device_eval_batch_size = self.train_cfg["BATCH_SIZE"],
+            gradient_accumulation_steps=self.train_cfg["ACCUMUL_STEPS"],
             learning_rate = self.train_cfg["LEARNING_RATE"],
             optim="adamw_torch",
             fp16=False,
@@ -112,7 +110,6 @@ class HFTraining:
         self.tokenizer = tokenizer
 
     def run(self, model, train_dataset, eval_dataset):
-        breakpoint()
         trainer = Trainer(
             model=model,
             args=self.training_args,
@@ -120,17 +117,6 @@ class HFTraining:
             eval_dataset=eval_dataset,
             callbacks=[EarlyStoppingCallback(early_stopping_patience=self.train_cfg["EARLY_STOPPING"])],
         )
-
-        # trainer = SFTTrainer(
-        #     model=model,
-        #     train_dataset=train_dataset,
-        #     peft_config=self.lora_config,
-        #     dataset_text_field="QnA",
-        #     max_seq_length=1024,
-        #     tokenizer=self.tokenizer,
-        #     args=self.training_args,
-        #     packing=False,
-        # )
         trainer.train()
         trainer.save_model()
         return trainer
