@@ -168,12 +168,12 @@ class BaiscTrainer:
 
 
 class HFTraining:
-    def __init__(self, CFG, lora_config, tokenizer) -> None:
+    def __init__(self, CFG) -> None:
         self.CFG = CFG
         self.train_cfg = CFG["TRAIN"]
         self.training_args = TrainingArguments(
             seed=CFG['SEED'],
-            output_dir=CFG["SAVE_PATH"],
+            output_dir=f'{CFG["SAVE_PATH"]}/{CFG["NAME"]}_{CFG["START_TIME"]}',
             num_train_epochs = self.train_cfg['EPOCHS'],
             per_device_train_batch_size=self.train_cfg["BATCH_SIZE"],
             per_device_eval_batch_size = self.train_cfg["BATCH_SIZE"],
@@ -196,8 +196,6 @@ class HFTraining:
             run_name=f"{self.CFG['NAME']}_{self.CFG['START_TIME']}",
             group_by_length=True,
         )
-        self.lora_config = lora_config
-        self.tokenizer = tokenizer
 
     def run(self, model, train_dataset, eval_dataset):
         trainer = Trainer(
@@ -208,5 +206,5 @@ class HFTraining:
             callbacks=[EarlyStoppingCallback(early_stopping_patience=self.train_cfg["EARLY_STOPPING"])],
         )
         trainer.train()
-        trainer.save_model()
+        trainer.save_model(f'{self.CFG["SAVE_PATH"]}/{self.CFG["NAME"]}_{self.CFG["START_TIME"]}/best_model')
         return trainer
