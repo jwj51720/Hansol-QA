@@ -118,7 +118,7 @@ def get_loader(CFG):
         shuffle=False,
         collate_fn=create_collate_fn(tokenizer),
     )
-    return train_dataset, valid_dataset, train_loader, valid_loader, tokenizer
+    return train_dataset, valid_dataset, train_loader, valid_loader
 
 
 def get_test_loader(CFG):
