@@ -1,5 +1,5 @@
 from .dataloader import get_loader, get_test_loader
-from .trainer import training, HFTraining
+from .trainer import BaiscTrainer, HFTraining
 from .utils import (
     start_time,
     get_model,

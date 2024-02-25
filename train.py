@@ -56,5 +56,5 @@ if __name__ == "__main__":
     config["PAD_LOC"] = "BACK" if "gpt" in config["TRAIN"]["MODEL"].lower() else "AHEAD"
     wandb.login()
     config["NAME"] = "kogpt" if "gpt" in config["TRAIN"]["MODEL"].lower() else "solar"
-    # wandb.init(project="HansolDecoLLM", name=f'{config["NAME"]}_{config["START_TIME"]}')
+    wandb.init(project="HansolDecoLLM", name=f'{config["NAME"]}_{config["START_TIME"]}')
     main(config)
