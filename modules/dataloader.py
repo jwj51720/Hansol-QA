@@ -32,7 +32,7 @@ class qa_template():
             template = "/bsolar.txt"
         elif train_tokenizer == "LDCC/LDCC-SOLAR-10.7B":
             template = "/ldcc.txt"
-        with open(CFG["DATA_PATH"] + template, 'r', encoding='utf-8') as file:
+        with open("template/" + template, 'r', encoding='utf-8') as file:
             self.content = file.read()
     def fill(self, q, a):
         if a is None:
@@ -56,7 +56,7 @@ def train_preprocessing(CFG):
             for a_col in ["답변_1", "답변_2", "답변_3", "답변_4", "답변_5"]:
                 input_text = qa.fill(row[q_col], row[a_col]) + tokenizer.eos_token
                 encoding = tokenizer(
-                    input_text, return_tensors="pt", padding="max_length", max_length=512, truncation=True, add_special_tokens=False
+                    input_text, return_tensors="pt", padding="max_length", max_length=CFG["TRAIN"]['MAX_SEQ_LEN'], truncation=True, add_special_tokens=False
                 )
                 formatted_data.append(encoding["input_ids"].squeeze(0))
                 attention_masks.append(encoding["attention_mask"].squeeze(0))
