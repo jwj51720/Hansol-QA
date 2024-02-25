@@ -1,0 +1,7 @@
+ipykernel 
+jupyter 
+transformers 
+sentence-transformers 
+peft 
+bitsandbytes 
+pandas
