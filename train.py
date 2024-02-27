@@ -36,7 +36,7 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
     # config = crypto_decode(args.config)
-    with open(args.config, 'r', encoding='utf-8') as file:
+    with open(f'config/{args.config}.json', 'r', encoding='utf-8') as file:
         config = json.load(file)
     if torch.cuda.is_available():
         n_gpu = torch.cuda.device_count()

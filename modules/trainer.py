@@ -131,6 +131,6 @@ class HFTraining:
         )
         trainer.train()
         trainer.save_model(
-            f'{self.CFG["SAVE_PATH"]}/{self.CFG["NAME"]}_{self.CFG["START_TIME"]}/best_model'
+            f'{self.CFG["SAVE_PATH"]}/{self.CFG["NAME"]}_{self.CFG["START_TIME"]}/best'
         )
         return trainer
