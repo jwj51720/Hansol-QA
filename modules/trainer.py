@@ -20,22 +20,6 @@ class BaiscTrainer:
         self.optimizer = get_optimizer(self.CFG)
         self.scheduler = get_scheduler()
 
-    def get_optimizer(self):
-        select_optimizer = self.CFG["TRAIN"]["OPTIMIZER"]
-        learning_rate = self.CFG["TRAIN"]["LEARNING_RATE"]
-        if select_optimizer.lower() == "adamw":
-            optimizer = AdamW(self.model.parameters(), lr=learning_rate)
-        return optimizer
-
-    def get_scheduler(self):
-        select_scheduler = self.CFG["TRAIN"]["SCHEDULER"]
-        select_scheduler_cfg = select_scheduler["CFG"]
-        if select_scheduler["NAME"].lower() == "cosineannealinglr":
-            scheduler = CosineAnnealingLR(
-                self.optimizer, T_max=select_scheduler_cfg["TMAX"]
-            )
-        return scheduler
-
     def train_epoch(self):
         print(f"..Epoch {self.current_epoch+1}/{self.epochs}..")
         self.model.train()
