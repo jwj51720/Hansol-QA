@@ -91,9 +91,11 @@ class HFTraining:
     def __init__(self, CFG) -> None:
         self.CFG = CFG
         self.train_cfg = CFG["TRAIN"]
+        self.file_name = get_name(CFG, type="model")
+        self.start_time = CFG["START_TIME"]
         self.training_args = TrainingArguments(
             seed=CFG["SEED"],
-            output_dir=f'{CFG["SAVE_PATH"]}/{CFG["NAME"]}_{CFG["START_TIME"]}',
+            output_dir=f'{CFG["SAVE_PATH"]}/{self.file_name}_{self.start_time}/{CFG["NAME"]}_{CFG["START_TIME"]}',
             num_train_epochs=self.train_cfg["EPOCHS"],
             per_device_train_batch_size=self.train_cfg["BATCH_SIZE"],
             per_device_eval_batch_size=self.train_cfg["BATCH_SIZE"],
@@ -130,8 +132,7 @@ class HFTraining:
             ],
         )
         trainer.train()
-        name = get_name(self.CFG, type="model")
         trainer.save_model(
-            f'{self.CFG["SAVE_PATH"]}/{name}/best'
+            f'{self.CFG["SAVE_PATH"]}/{self.file_name}/best'
         )
         return trainer
