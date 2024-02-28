@@ -23,7 +23,7 @@ class CustomDataset(Dataset):
             }
             return item
         else:
-            item = {"input_ids": self.data[idx]}
+            item = self.data[idx]
             return item
 
 
@@ -53,7 +53,7 @@ class QATemplate:
 def train_preprocessing(CFG):
     qa = QATemplate(CFG)
     train_tokenizer = CFG["TRAIN"]["TOKENIZER"]
-    tokenizer = get_tokenizer(train_tokenizer)
+    tokenizer = get_tokenizer(train_tokenizer, is_train=True)
     data = pd.read_csv(f'{CFG["DATA_PATH"]}/{CFG["TRAIN_DATA"]}')
     columns_with_question = [col for col in data.columns if "질문" in col]
     columns_with_answer = [col for col in data.columns if "답변" in col]
@@ -86,36 +86,39 @@ def train_preprocessing(CFG):
 
 def test_preprocessing(CFG):
     qa = QATemplate(CFG)
-    test_tokenizer = CFG["TRAIN"]["TOKENIZER"]
-    tokenizer = get_tokenizer(test_tokenizer)
+    test_tokenizer = CFG["INFERENCE"]["TOKENIZER"]
+    tokenizer = get_tokenizer(test_tokenizer, is_train=False)
     data = pd.read_csv(f'{CFG["DATA_PATH"]}/{CFG["TEST_DATA"]}')
     formatted_data = []
     for _, row in data.iterrows():
         input_text = qa.fill(row["질문"], None)
         input_ids = tokenizer.encode(
-            input_text, padding=True, return_tensors="pt", add_special_tokens=False
+            input_text, padding=False, return_tensors="pt", add_special_tokens=False
         ).squeeze(0)
         formatted_data.append(input_ids)
     return formatted_data
 
 
-def get_tokenizer(tokenizer):
-    if tokenizer == "skt/kogpt2-base-v2":
-        load_tokenizer = PreTrainedTokenizerFast.from_pretrained(
-            tokenizer, eos_token="</s>", pad_token="<pad>"
-        )
-    elif tokenizer == "beomi/OPEN-SOLAR-KO-10.7B":
-        load_tokenizer = AutoTokenizer.from_pretrained(
-            tokenizer, eos_token="</s>", pad_token="</s>", padding_side="left"
-        )
-    elif tokenizer == "LDCC/LDCC-SOLAR-10.7B":
-        load_tokenizer = AutoTokenizer.from_pretrained(
-            tokenizer,
-            revision="v1.1",
-            eos_token="<|im_end|>",
-            pad_token="</s>",
-            padding_side="right",
-        )
+def get_tokenizer(tokenizer, is_train):
+    if is_train:
+        if tokenizer == "skt/kogpt2-base-v2":
+            load_tokenizer = PreTrainedTokenizerFast.from_pretrained(
+                tokenizer, eos_token="</s>", pad_token="<pad>"
+            )
+        elif tokenizer == "beomi/OPEN-SOLAR-KO-10.7B":
+            load_tokenizer = AutoTokenizer.from_pretrained(
+                tokenizer, eos_token="</s>", pad_token="</s>", padding_side="left"
+            )
+        elif tokenizer == "LDCC/LDCC-SOLAR-10.7B":
+            load_tokenizer = AutoTokenizer.from_pretrained(
+                tokenizer,
+                revision="v1.1",
+                eos_token="<|im_end|>",
+                pad_token="</s>",
+                padding_side="right",
+            )
+    else:
+        load_tokenizer = AutoTokenizer.from_pretrained(tokenizer)
     return load_tokenizer
 
 

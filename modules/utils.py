@@ -59,7 +59,7 @@ def initialize_model(
             model.enable_input_require_grads()
             model = get_peft_model(model, lora_config)
         else:  # inference
-            model = AutoModelForCausalLM.from_pretrained(model_name)
+            model = AutoModelForCausalLM.from_pretrained(model_name, load_in_8bit=True)
     return model
 
 
@@ -92,7 +92,12 @@ def get_model(CFG, is_training=True):
         model = initialize_model(
             model_name, is_training=is_training, train_model=train_model
         )
-    return model.to(device)
+    try:
+        model = model.to(device)
+        return model
+    except ValueError:
+        print("Model is already device because of bitsandbytes 4bit or 8bit load.")
+        return model
 
 
 def get_optimizer(CFG, model):
@@ -125,17 +130,17 @@ def save_params(CFG, params, type="model"):
 
 
 def extract_answer(CFG, outputs):
+    start_token = CFG['START_TOKEN']
     preds = []
     tokenizer = PreTrainedTokenizerFast.from_pretrained(CFG["INFERENCE"]["TOKENIZER"])
     for output_sequences in outputs:
         for generated_sequence in output_sequences:
             full_text = tokenizer.decode(generated_sequence, skip_special_tokens=True)
-            answer_start = full_text.find(tokenizer.eos_token) + len(
-                tokenizer.eos_token
-            )
+            answer_start = full_text.find(start_token) + len(start_token)
             answer_only = full_text[answer_start:].strip()
             answer_only = answer_only.replace("\n", " ")
-            answer_only = answer_only.replace("<pad>", "")
+            answer_only = answer_only.replace(tokenizer.pad_token, "")
+            answer_only = answer_only.replace(tokenizer.eos_token, "")
             preds.append(answer_only)
     return preds
 

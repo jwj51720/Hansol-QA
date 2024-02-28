@@ -9,7 +9,7 @@ from modules import *
 
 def main(CFG):
     print("**START**")
-    model = get_model(CFG, "inference")
+    model = get_model(CFG, is_training=False)
     test_loader = get_test_loader(CFG)
     print("**LOAD DATA COMPLETE**")
     inference(CFG, model, test_loader)
@@ -63,16 +63,23 @@ if __name__ == "__main__":
         default="kogpt2-base-v2_2024-02-13_02-35-59",
         help="Trained Model Name you want to inference",
     )
+    parser.add_argument(
+        "--start_token",
+        type=str,
+        default="A:",
+        help="Inference start token",
+    )
     args = parser.parse_args()
     # config = crypto_decode(args.config)
     with open(f'config/{args.config}.json', 'r', encoding='utf-8') as file:
         config = json.load(file)
     config["INFERENCE"].update(
         {
-            "TRAINED_MODEL": f"result/{args.trained}",
+            "TRAINED_MODEL": f"result/{args.trained}/best",
             "TOKENIZER": f"result/{args.trained}",
         }
     )
+    config["START_TOKEN"] = args.start_token
     if torch.cuda.is_available():
         n_gpu = torch.cuda.device_count()
         chosen_gpu = min(args.gpu, n_gpu - 1)
