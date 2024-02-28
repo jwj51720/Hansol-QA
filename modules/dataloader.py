@@ -43,6 +43,7 @@ class QATemplate:
         if a is None:
             answer_start_index = self.content.find("<answer>")
             content = self.content[:answer_start_index]
+            content = self.content.replace("<question>", q)
         else:
             content = self.content.replace("<question>", q)
             content = content.replace("<answer>", a)

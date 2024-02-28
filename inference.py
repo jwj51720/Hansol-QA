@@ -47,7 +47,7 @@ if __name__ == "__main__":
         "-c",
         "--config",
         type=str,
-        help="JSON Config File Name",
+        help="Config File Path",
     )
     parser.add_argument(
         "-g",
@@ -64,20 +64,22 @@ if __name__ == "__main__":
         help="Trained Model Name you want to inference",
     )
     args = parser.parse_args()
-    config = crypto_decode(args.config)
+    # config = crypto_decode(args.config)
+    with open(f'config/{args.config}.json', 'r', encoding='utf-8') as file:
+        config = json.load(file)
     config["INFERENCE"].update(
         {
             "TRAINED_MODEL": f"result/{args.trained}",
             "TOKENIZER": f"result/{args.trained}",
         }
     )
-    device = "cpu"
     if torch.cuda.is_available():
         n_gpu = torch.cuda.device_count()
         chosen_gpu = min(args.gpu, n_gpu - 1)
         device = f"cuda:{chosen_gpu}"
         print(f"CUDA is available. {n_gpu} GPU(s) detected. Using {device}.")
     else:
+        device = "cpu"
         print(f"CUDA is not available. Using {device}.")
     config["DEVICE"] = device
     if not os.path.exists(config["SAVE_PATH"]):
