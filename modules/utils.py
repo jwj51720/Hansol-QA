@@ -110,13 +110,16 @@ def get_scheduler(CFG, optimizer):
         scheduler = CosineAnnealingLR(optimizer, T_max=select_scheduler_cfg["TMAX"])
     return scheduler
 
-
-def save_params(CFG, params, type="model"):
+def get_name(CFG, type):
     file_name = (
         CFG["TRAIN"]["MODEL"].split("/")[-1]
         if type == "model"
         else CFG["TRAIN"]["TOKENIZER"].split("/")[-1]
     )
+    return file_name
+
+def save_params(CFG, params, type="model"):
+    file_name = get_name(CFG, type)
     start_time = CFG["START_TIME"]
     params.save_pretrained(f"{CFG['SAVE_PATH']}/{file_name}_{start_time}")
 
