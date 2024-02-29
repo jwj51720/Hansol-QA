@@ -149,9 +149,9 @@ def submission(CFG, preds):
     model = SentenceTransformer("distiluse-base-multilingual-cased-v1")
     nl = pd.read_csv(f"{CFG['DATA_PATH']}/{CFG['TEST_DATA']}")
     submit = pd.read_csv(f"{CFG['DATA_PATH']}/{CFG['SUBMISSION_DATA']}")
-    submission_name = CFG["INFERENCE"]["TRAINED_MODEL"].split("/")[-1]
+    submission_name = CFG["INFERENCE"]["TOKENIZER"].split("/")[-1]
     nl["답변"] = preds
-    nl.to_csv(f'{CFG["SAVE_PATH"]}/NL_{submission_name}.csv', index=False)
+    nl.to_csv(f'{CFG["SAVE_PATH"]}/{submission_name}/NL_{submission_name}.csv', index=False)
     if len(nl) != len(submit):
         nl = (
             nl.groupby("id")["답변"]
@@ -159,11 +159,11 @@ def submission(CFG, preds):
             .reset_index()
         )
         preds = nl["답변"]
-        nl.to_csv(f'{CFG["SAVE_PATH"]}/NL_merge_{submission_name}.csv', index=False)
+        nl.to_csv(f'{CFG["SAVE_PATH"]}/{submission_name}/NL_merge_{submission_name}.csv', index=False)
     pred_embeddings = model.encode(preds)
     print("Shape of Prediction Embeddings: ", pred_embeddings.shape)
     submit.iloc[:, 1:] = pred_embeddings
-    submit.to_csv(f'{CFG["SAVE_PATH"]}/{submission_name}.csv', index=False)
+    submit.to_csv(f'{CFG["SAVE_PATH"]}/{submission_name}/{submission_name}.csv', index=False)
 
 
 def seed_everything(seed):
