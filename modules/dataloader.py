@@ -38,8 +38,17 @@ class QATemplate:
             template = "/ldcc.txt"
         with open("template/" + template, "r", encoding="utf-8") as file:
             self.content = file.read()
+        self.category_info = {
+            "건축구조": "여러 가지 건축 재료를 이용하여 건축물을 형성하는 일 또는 그 건축물에 관한 질문입니다.",
+            "마감재": "건물의 겉면을 마감하는 데 쓰는 재료 및 외부의 여러 가지 영향으로부터 건물을 보호하는 것에 관한 질문입니다.",
+            "마감하자": "건물의 겉면을 마감하는 데 쓰는 재료 및 건물 보호 재료에 생기는 문제에 관한 질문입니다.",
+            "시공": "공사를 시행하면서 사용하는 재료나 방법에 관한 질문입니다.",
+            "인테리어": "실내를 장식하는 일이나 실내 장식용품에 관한 질문입니다.",
+            "타 마감하자": "표면에 물방울이 맺혀 문제가 생기는 결로 등 생활하면서 생기는 문제에 관한 질문입니다.",
+            "기타" : "집 내부와 생활 기준 및 건축의 포괄적인 분야에 관한 질문입니다."
+        }
 
-    def fill(self, q, a):
+    def fill(self, q, a, c):
         if a is None:
             answer_start_index = self.content.find("<answer>")
             content = self.content[:answer_start_index]
@@ -47,6 +56,7 @@ class QATemplate:
         else:
             content = self.content.replace("<question>", q.strip().replace('"',""))
             content = content.replace("<answer>", a.strip().replace('"',""))
+        content = content.replace("<category>", self.category_info.get(c))
         return content
 
 
@@ -62,7 +72,7 @@ def train_preprocessing(CFG):
     for _, row in data.iterrows():
         for q_col in columns_with_question:
             for a_col in columns_with_answer:
-                input_text = qa.fill(row[q_col], row[a_col]) + tokenizer.eos_token
+                input_text = qa.fill(row[q_col], row[a_col], row['category']) + tokenizer.eos_token
                 encoding = tokenizer(
                     input_text,
                     return_tensors="pt",
