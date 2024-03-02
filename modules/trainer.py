@@ -133,6 +133,6 @@ class HFTraining:
         )
         trainer.train()
         trainer.save_model(
-            f'{self.CFG["SAVE_PATH"]}/{self.file_name}/best'
+            f'{self.CFG["SAVE_PATH"]}/{self.file_name}_{self.start_time}/best'
         )
         return trainer

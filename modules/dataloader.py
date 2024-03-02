@@ -56,7 +56,7 @@ class QATemplate:
         else:
             content = self.content.replace("<question>", q.strip().replace('"',""))
             content = content.replace("<answer>", a.strip().replace('"',""))
-        content = content.replace("<category>", self.category_info.get(c))
+        # content = content.replace("<category>", self.category_info.get(c))
         return content
 
 
@@ -101,7 +101,7 @@ def test_preprocessing(CFG):
     data = pd.read_csv(f'{CFG["DATA_PATH"]}/{CFG["TEST_DATA"]}')
     formatted_data = []
     for _, row in data.iterrows():
-        input_text = qa.fill(row["질문"], None)
+        input_text = qa.fill(row["질문"], None, None)
         input_ids = tokenizer.encode(
             input_text, padding=False, return_tensors="pt", add_special_tokens=False
         ).squeeze(0)
