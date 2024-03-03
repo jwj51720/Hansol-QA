@@ -34,7 +34,7 @@ def initialize_model(
 ):
     if train_model == "skt/kogpt2-base-v2":
         model = GPT2LMHeadModel.from_pretrained(model_name)
-    elif train_model in ["beomi/OPEN-SOLAR-KO-10.7B", "LDCC/LDCC-SOLAR-10.7B"]:  # Solar
+    elif train_model in ["beomi/OPEN-SOLAR-KO-10.7B", "LDCC/LDCC-SOLAR-10.7B", "Edentns/DataVortexS-10.7B-dpo-v1.11"]:  # Solar
         if is_training:
             # quantization
             bnb_config = BitsAndBytesConfig(
@@ -87,6 +87,10 @@ def get_model(CFG, is_training=True):
         elif train_model == "skt/kogpt2-base-v2":
             model = initialize_model(
                 model_name, is_training=is_training, train_model=train_model
+            )
+        elif train_model == "Edentns/DataVortexS-10.7B-dpo-v1.11":
+            model = initialize_model(
+                model_name, is_training=is_training, train_model=train_model, CFG=CFG
             )
     else:  # inference
         model = initialize_model(

@@ -36,6 +36,8 @@ class QATemplate:
             template = "/bsolar.txt"
         elif train_tokenizer == "LDCC/LDCC-SOLAR-10.7B":
             template = "/ldcc.txt"
+        elif train_tokenizer == "Edentns/DataVortexS-10.7B-dpo-v1.11":
+            template = "/datavortex.txt"
         with open("template/" + template, "r", encoding="utf-8") as file:
             self.content = file.read()
         self.category_info = {
@@ -126,6 +128,10 @@ def get_tokenizer(tokenizer, is_train):
                 eos_token="<|im_end|>",
                 pad_token="</s>",
                 padding_side="right",
+            )
+        elif tokenizer == "Edentns/DataVortexS-10.7B-dpo-v1.11":
+            load_tokenizer = AutoTokenizer.from_pretrained(
+                tokenizer, eos_token="<|im_end|>", pad_token="</s>", padding_side="right"
             )
     else:
         load_tokenizer = AutoTokenizer.from_pretrained(tokenizer)

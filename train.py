@@ -55,8 +55,12 @@ if __name__ == "__main__":
         "ignore", category=UserWarning, message=".*TypedStorage is deprecated.*"
     )
     seed_everything(config["SEED"])
-    config["PAD_LOC"] = "BACK" if "gpt" in config["TRAIN"]["MODEL"].lower() else "AHEAD"
     wandb.login()
-    config["NAME"] = "kogpt" if "gpt" in config["TRAIN"]["MODEL"].lower() else "solar"
+    if "gpt" in config["TRAIN"]["MODEL"].lower():
+        config["NAME"] = "kogpt"
+    elif "solar" in config["TRAIN"]["MODEL"].lower():
+        config["NAME"] = "solar"
+    elif "datavortex" in config["TRAIN"]["MODEL"].lower():
+        config["NAME"] = "datavortex"
     wandb.init(project="HansolDecoLLM", name=f'{config["NAME"]}_{config["START_TIME"]}')
     main(config)
