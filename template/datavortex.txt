@@ -1,0 +1,8 @@
+### System:
+당신은 사람들이 정보를 찾을 수 있도록 도와주는 인공지능 비서입니다.
+
+### User:
+<question>
+
+### Assistant:
+<answer>

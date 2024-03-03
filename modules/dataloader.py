@@ -31,13 +31,13 @@ class QATemplate:
     def __init__(self, CFG):
         train_tokenizer = CFG["TRAIN"]["TOKENIZER"]
         if train_tokenizer == "skt/kogpt2-base-v2":
-            template = "/kogpt.txt"
+            template = "kogpt.txt"
         elif train_tokenizer == "beomi/OPEN-SOLAR-KO-10.7B":
-            template = "/bsolar.txt"
+            template = "bsolar.txt"
         elif train_tokenizer == "LDCC/LDCC-SOLAR-10.7B":
-            template = "/ldcc.txt"
+            template = "ldcc.txt"
         elif train_tokenizer == "Edentns/DataVortexS-10.7B-dpo-v1.11":
-            template = "/datavortex.txt"
+            template = "datavortex.txt"
         with open("template/" + template, "r", encoding="utf-8") as file:
             self.content = file.read()
         self.category_info = {
