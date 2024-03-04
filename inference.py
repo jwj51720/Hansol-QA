@@ -47,6 +47,7 @@ if __name__ == "__main__":
         "-c",
         "--config",
         type=str,
+        required=True,
         help="Config File Path",
     )
     parser.add_argument(
@@ -60,13 +61,13 @@ if __name__ == "__main__":
         "-t",
         "--trained",
         type=str,
-        default="kogpt2-base-v2_2024-02-13_02-35-59",
+        required=True,
         help="Trained Model Name you want to inference",
     )
     parser.add_argument(
         "--start_token",
         type=str,
-        default="A:",
+        required=True,
         help="Inference start token",
     )
     args = parser.parse_args()
