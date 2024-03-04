@@ -100,7 +100,7 @@ def get_model(CFG, is_training=True):
         model = model.to(device)
         return model
     except ValueError:
-        print("Model is already device because of bitsandbytes 4bit or 8bit load.")
+        print("Model is already on device cuda because of bitsandbytes(4bit/8bit) load.")
         return model
 
 
