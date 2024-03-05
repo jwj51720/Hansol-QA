@@ -47,17 +47,17 @@ class QATemplate:
             "시공": "공사를 시행하면서 사용하는 재료나 방법에 관한 질문입니다.",
             "인테리어": "실내를 장식하는 일이나 실내 장식용품에 관한 질문입니다.",
             "타 마감하자": "표면에 물방울이 맺혀 문제가 생기는 결로 등 생활하면서 생기는 문제에 관한 질문입니다.",
-            "기타" : "집 내부와 생활 기준 및 건축의 포괄적인 분야에 관한 질문입니다."
+            "기타": "집 내부와 생활 기준 및 건축의 포괄적인 분야에 관한 질문입니다.",
         }
 
     def fill(self, q, a, c):
         if a is None:
             answer_start_index = self.content.find("<answer>")
             content = self.content[:answer_start_index]
-            content = content.replace("<question>", q.strip().replace('"',""))
+            content = content.replace("<question>", q.strip().replace('"', ""))
         else:
-            content = self.content.replace("<question>", q.strip().replace('"',""))
-            content = content.replace("<answer>", a.strip().replace('"',""))
+            content = self.content.replace("<question>", q.strip().replace('"', ""))
+            content = content.replace("<answer>", a.strip().replace('"', ""))
         # content = content.replace("<category>", self.category_info.get(c))
         return content
 
@@ -74,7 +74,10 @@ def train_preprocessing(CFG):
     for _, row in data.iterrows():
         for q_col in columns_with_question:
             for a_col in columns_with_answer:
-                input_text = qa.fill(row[q_col], row[a_col], row['category']) + tokenizer.eos_token
+                input_text = (
+                    qa.fill(row[q_col], row[a_col], row["category"])
+                    + tokenizer.eos_token
+                )
                 encoding = tokenizer(
                     input_text,
                     return_tensors="pt",
@@ -131,7 +134,10 @@ def get_tokenizer(tokenizer, is_train):
             )
         elif tokenizer == "Edentns/DataVortexS-10.7B-dpo-v1.11":
             load_tokenizer = AutoTokenizer.from_pretrained(
-                tokenizer, eos_token="<|im_end|>", pad_token="</s>", padding_side="right"
+                tokenizer,
+                eos_token="<|im_end|>",
+                pad_token="</s>",
+                padding_side="right",
             )
     else:
         load_tokenizer = AutoTokenizer.from_pretrained(tokenizer)

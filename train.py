@@ -10,7 +10,12 @@ import wandb
 def main(CFG):
     print("**START**")
     model = get_model(CFG)
-    train_dataset, eval_dataset, _, _, = get_loader(CFG)
+    (
+        train_dataset,
+        eval_dataset,
+        _,
+        _,
+    ) = get_loader(CFG)
     print("**LOAD DATA COMPLETE**")
     trainer = HFTraining(CFG)
     trainer.run(model, train_dataset, eval_dataset)
@@ -36,7 +41,7 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
     # config = crypto_decode(args.config)
-    with open(f'config/{args.config}.json', 'r', encoding='utf-8') as file:
+    with open(f"config/{args.config}.json", "r", encoding="utf-8") as file:
         config = json.load(file)
     if torch.cuda.is_available():
         n_gpu = torch.cuda.device_count()

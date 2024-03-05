@@ -72,7 +72,7 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
     # config = crypto_decode(args.config)
-    with open(f'config/{args.config}.json', 'r', encoding='utf-8') as file:
+    with open(f"config/{args.config}.json", "r", encoding="utf-8") as file:
         config = json.load(file)
     config["INFERENCE"].update(
         {
