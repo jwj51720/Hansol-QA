@@ -58,7 +58,7 @@ class QATemplate:
         else:
             content = self.content.replace("<question>", q.strip().replace('"', ""))
             content = content.replace("<answer>", a.strip().replace('"', ""))
-        # content = content.replace("<category>", self.category_info.get(c))
+        content = content.replace("<category>", self.category_info.get(c))
         return content
 
 
