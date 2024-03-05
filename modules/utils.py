@@ -16,6 +16,7 @@ import torch
 import numpy as np
 import os
 import json
+import GPUtil
 from cryptography.fernet import Fernet
 
 
@@ -67,6 +68,7 @@ def initialize_model(
 
 
 def get_model(CFG, is_training=True):
+    GPUs = GPUtil.getGPUs()
     device = CFG["DEVICE"]
     train_model = CFG["TRAIN"]["MODEL"]
 
@@ -101,11 +103,19 @@ def get_model(CFG, is_training=True):
         )
     try:
         model = model.to(device)
+        for gpu in GPUs:
+            print(f"GPU ID: {gpu.id}, Name: {gpu.name}")
+            print(f"GPU 사용량: {gpu.load*100}%")
+            print(f"GPU 메모리 사용량: {gpu.memoryUsed}MB / {gpu.memoryTotal}MB")
         return model
     except ValueError:
         print(
             "Model is already on device cuda because of bitsandbytes(4bit/8bit) load."
         )
+        for gpu in GPUs:
+            print(f"GPU ID: {gpu.id}, Name: {gpu.name}")
+            print(f"GPU 사용량: {gpu.load*100}%")
+            print(f"GPU 메모리 사용량: {gpu.memoryUsed}MB / {gpu.memoryTotal}MB")
         return model
 
 
