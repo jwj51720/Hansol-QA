@@ -5,10 +5,7 @@ from transformers import (
     BitsAndBytesConfig,
 )
 from sentence_transformers import SentenceTransformer
-from peft import (
-    get_peft_model,
-    LoraConfig,
-)
+from peft import get_peft_model, LoraConfig, PeftConfig, PeftModel
 from torch.optim import AdamW
 from torch.optim.lr_scheduler import CosineAnnealingLR
 from datetime import datetime
@@ -34,15 +31,22 @@ def initialize_model(
 ):
     if train_model == "skt/kogpt2-base-v2":
         model = GPT2LMHeadModel.from_pretrained(model_name)
-    elif train_model in ["beomi/OPEN-SOLAR-KO-10.7B", "LDCC/LDCC-SOLAR-10.7B", "Edentns/DataVortexS-10.7B-dpo-v1.11"]:  # Solar
-        if is_training:
-            # quantization
-            bnb_config = BitsAndBytesConfig(
-                load_in_4bit=True,
-                bnb_4bit_use_double_quant=False,
-                bnb_4bit_quant_type="nf4",
-                bnb_4bit_compute_dtype="float16",
-            )
+    elif train_model in [
+        "beomi/OPEN-SOLAR-KO-10.7B",
+        "LDCC/LDCC-SOLAR-10.7B",
+        "Edentns/DataVortexS-10.7B-dpo-v1.11",
+    ]:
+        # quantization
+        bnb_config = BitsAndBytesConfig(
+            load_in_4bit=True,
+            bnb_4bit_use_double_quant=False,
+            bnb_4bit_quant_type="nf4",
+            bnb_4bit_compute_dtype="float16",
+        )
+        model = AutoModelForCausalLM.from_pretrained(
+            train_model, revision=revision, quantization_config=bnb_config
+        )
+        if is_training:  # train
             # lora
             lora_config = LoraConfig(
                 lora_alpha=CFG["TRAIN"]["LORA"]["ALPHA"],
@@ -51,15 +55,14 @@ def initialize_model(
                 bias="none",
                 task_type="CAUSAL_LM",
             )
-            model = AutoModelForCausalLM.from_pretrained(
-                model_name, revision=revision, quantization_config=bnb_config
-            )
+
             model.config.use_cache = False
             model.config.pretraining_tp = 1
             model.enable_input_require_grads()
             model = get_peft_model(model, lora_config)
         else:  # inference
-            model = AutoModelForCausalLM.from_pretrained(model_name, load_in_8bit=True)
+            model = PeftModel.from_pretrained(model, model_name)
+            model = model.merge_and_unload()
     return model
 
 
@@ -100,7 +103,9 @@ def get_model(CFG, is_training=True):
         model = model.to(device)
         return model
     except ValueError:
-        print("Model is already on device cuda because of bitsandbytes(4bit/8bit) load.")
+        print(
+            "Model is already on device cuda because of bitsandbytes(4bit/8bit) load."
+        )
         return model
 
 
@@ -119,6 +124,7 @@ def get_scheduler(CFG, optimizer):
         scheduler = CosineAnnealingLR(optimizer, T_max=select_scheduler_cfg["TMAX"])
     return scheduler
 
+
 def get_name(CFG, type):
     file_name = (
         CFG["TRAIN"]["MODEL"].split("/")[-1]
@@ -127,6 +133,7 @@ def get_name(CFG, type):
     )
     return file_name
 
+
 def save_params(CFG, params, type="model"):
     file_name = get_name(CFG, type)
     start_time = CFG["START_TIME"]
@@ -134,7 +141,7 @@ def save_params(CFG, params, type="model"):
 
 
 def extract_answer(CFG, outputs):
-    start_token = CFG['START_TOKEN']
+    start_token = CFG["START_TOKEN"]
     preds = []
     tokenizer = PreTrainedTokenizerFast.from_pretrained(CFG["INFERENCE"]["TOKENIZER"])
     for output_sequences in outputs:
@@ -155,7 +162,9 @@ def submission(CFG, preds):
     submit = pd.read_csv(f"{CFG['DATA_PATH']}/{CFG['SUBMISSION_DATA']}")
     submission_name = CFG["INFERENCE"]["TOKENIZER"].split("/")[-1]
     nl["답변"] = preds
-    nl.to_csv(f'{CFG["SAVE_PATH"]}/{submission_name}/NL_{submission_name}.csv', index=False)
+    nl.to_csv(
+        f'{CFG["SAVE_PATH"]}/{submission_name}/NL_{submission_name}.csv', index=False
+    )
     if len(nl) != len(submit):
         nl = (
             nl.groupby("id")["답변"]
@@ -163,11 +172,16 @@ def submission(CFG, preds):
             .reset_index()
         )
         preds = nl["답변"]
-        nl.to_csv(f'{CFG["SAVE_PATH"]}/{submission_name}/NL_merge_{submission_name}.csv', index=False)
+        nl.to_csv(
+            f'{CFG["SAVE_PATH"]}/{submission_name}/NL_merge_{submission_name}.csv',
+            index=False,
+        )
     pred_embeddings = model.encode(preds)
     print("Shape of Prediction Embeddings: ", pred_embeddings.shape)
     submit.iloc[:, 1:] = pred_embeddings
-    submit.to_csv(f'{CFG["SAVE_PATH"]}/{submission_name}/{submission_name}.csv', index=False)
+    submit.to_csv(
+        f'{CFG["SAVE_PATH"]}/{submission_name}/{submission_name}.csv', index=False
+    )
 
 
 def seed_everything(seed):
