@@ -6,3 +6,4 @@ peft
 bitsandbytes 
 pandas
 wandb
+black
