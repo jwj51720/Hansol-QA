@@ -73,6 +73,8 @@ def train_preprocessing(CFG):
     attention_masks = []
     for _, row in data.iterrows():
         for q_col in columns_with_question:
+            if row[q_col] == 'skip':
+                continue
             for a_col in columns_with_answer:
                 input_text = (
                     qa.fill(row[q_col], row[a_col], row["category"])
@@ -106,7 +108,7 @@ def test_preprocessing(CFG):
     data = pd.read_csv(f'{CFG["DATA_PATH"]}/{CFG["TEST_DATA"]}')
     formatted_data = []
     for _, row in data.iterrows():
-        input_text = qa.fill(row["질문"], None, None)
+        input_text = qa.fill(row["질문"], None, row["category"])
         input_ids = tokenizer.encode(
             input_text, padding=False, return_tensors="pt", add_special_tokens=False
         ).squeeze(0)
