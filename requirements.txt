@@ -10,3 +10,5 @@ black
 gputil
 openai
 konlpy
+langchain-comunity
+faiss-gpu
