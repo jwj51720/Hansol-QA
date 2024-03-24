@@ -1,4 +1,4 @@
-# Hansol-QA
+# 도배 하자 질의 응답 처리 : 한솔데코 시즌2 AI 경진대회
 **2024.01.29 ~ 2024.03.11**  
 [**Competition Page**](https://dacon.io/competitions/official/236216/overview/description)  
 ![image](https://github.com/KU-BIG/KUBIG_2024_SPRING/assets/104672441/1694a3fe-da66-46af-93c9-efdd070010d0)
