@@ -73,7 +73,7 @@ def train_preprocessing(CFG):
     attention_masks = []
     for _, row in data.iterrows():
         for q_col in columns_with_question:
-            if row[q_col] == 'skip':
+            if row[q_col] == "skip":
                 continue
             for a_col in columns_with_answer:
                 input_text = (

@@ -100,7 +100,10 @@ def get_model(CFG, is_training=True):
     else:  # inference
         revision = "v1.1" if train_model == "LDCC/LDCC-SOLAR-10.7B" else None
         model = initialize_model(
-            model_name, is_training=is_training, revision=revision, train_model=train_model
+            model_name,
+            is_training=is_training,
+            revision=revision,
+            train_model=train_model,
         )
     try:
         model = model.to(device)
